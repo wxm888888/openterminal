@@ -1,10 +1,11 @@
 import re
 import json
+import os
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key='sk-TiFLADXP6zKkEykXhWcK8rGGLdLmxz2WApfjQEkAOoKeFQMH',
-    base_url='https://yeysai.com/v1'
+    api_key=os.getenv('OPENAI_API_KEY'),
+    base_url=os.getenv('OPENAI_BASE_URL', 'https://yeysai.com/v1')
 )
 
 class TerminalParser:    
@@ -316,28 +317,31 @@ Line {c['line_num']}:
     async def _llm_classify_action_observation(self, turn):
         system_prompt = """You are an expert in Terminal Command/Output Classification.
 
-Given the raw lines of a terminal turn, classify which part is the user's command (action) and which part is the command's output (observation).
+Given the raw lines of a terminal turn, classify which part is the prompt, which part is the user's command (action), and which part is the command's output (observation).
 
 Key Principles:
-1. The first line usually contains: prompt + command
-2. Multi-line commands use continuation (lines ending with \\) - these should ALL be part of the action
-3. Command parameters/arguments that span multiple lines are part of the action
-4. Everything after the complete command is the observation (output)
-5. The prompt itself is NOT part of the action content
+1. The prompt may be single-line or multi-line (e.g., two-line prompts like "user@host|~/path\\n> ")
+2. After the prompt comes the command (may be on the same line as the last prompt line, or on separate lines)
+3. Multi-line commands use continuation (lines ending with \\) - these should ALL be part of the action
+4. Command parameters/arguments that span multiple lines are part of the action
+5. Everything after the complete command is the observation (output)
+6. The prompt itself is NOT part of the action content
 
 Common Patterns:
-- Single-line command: Line 1 has prompt + command, Lines 2+ are output
+- Single-line prompt: "user@host:~$ command" - prompt is "user@host:~$"
+- Multi-line prompt: "user@host|~/path\\n> command" - prompt is "user@host|~/path\\n>"
 - Multi-line command with \\: Multiple lines form the command, then output follows
 - Here-doc (<<EOF): Everything until EOF is part of the command input
 - Interactive commands: May have interleaved input/output
 
 Return JSON format:
 {
+  "prompt": "The complete prompt (may be multi-line, use \\n for line breaks)",
   "action_content": "The complete command (without prompt, backslashes removed, multi-line merged with spaces)",
   "observation_lines": ["line1 of output", "line2 of output", ...]
 }
 
-Example 1 - Single line:
+Example 1 - Single line prompt:
 Raw lines:
   user@host:~$ ls -la
   total 8
@@ -345,11 +349,26 @@ Raw lines:
 
 Result:
 {
+  "prompt": "user@host:~$ ",
   "action_content": "ls -la",
   "observation_lines": ["total 8", "drwxr-xr-x 2 user user 4096 Jan 1 00:00 ."]
 }
 
-Example 2 - Multi-line command:
+Example 2 - Multi-line prompt:
+Raw lines:
+  user@host|~/documents
+  > ls -la
+  total 8
+  drwxr-xr-x 2 user user 4096 Jan 1 00:00 .
+
+Result:
+{
+  "prompt": "user@host|~/documents\n> ",
+  "action_content": "ls -la",
+  "observation_lines": ["total 8", "drwxr-xr-x 2 user user 4096 Jan 1 00:00 ."]
+}
+
+Example 3 - Multi-line command:
 Raw lines:
   $ docker run \\
     --name test \\
@@ -359,6 +378,7 @@ Raw lines:
 
 Result:
 {
+  "prompt": "$ ",
   "action_content": "docker run --name test -p 8080:80 nginx",
   "observation_lines": ["Unable to find image 'nginx:latest' locally"]
 }"""
@@ -368,14 +388,14 @@ Result:
             for i, line in enumerate(turn['raw_lines'])
         ])
         
-        user_message = f"""Classify the action (command) and observation (output) from these raw lines:
+        user_message = f"""Classify the prompt, action (command), and observation (output) from these raw lines:
 
 [Raw Lines] ({len(turn['raw_lines'])} line(s))
 {raw_lines_text}
 
-[Prompt detected]: {turn['prompt']}
+[Initial prompt detected by regex]: {turn['prompt']}
 
-Please return the action content (command without prompt) and observation lines (output)."""
+Please extract the complete prompt (including all prompt lines if multi-line), the action content (command without prompt), and observation lines (output)."""
         
         try:
             response = await client.chat.completions.create(
@@ -395,6 +415,11 @@ Please return the action content (command without prompt) and observation lines 
                 result = result.split('```')[1].split('```')[0]
             
             data = json.loads(result)
+            
+            # 更新提示符（使用LLM提取的完整提示符，包括多行提示符）
+            extracted_prompt = data.get('prompt', '').strip()
+            if extracted_prompt:
+                turn['prompt'] = extracted_prompt
             
             turn['action']['content'] = data.get('action_content', '').strip()
             

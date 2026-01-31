@@ -5,8 +5,8 @@ from openai import AsyncOpenAI
 from llm_enhanced_split_async import one_model_parse_async
 
 async_client = AsyncOpenAI(
-    api_key='sk-TiFLADXP6zKkEykXhWcK8rGGLdLmxz2WApfjQEkAOoKeFQMH',
-    base_url='https://yeysai.com/v1'
+    api_key=os.getenv('OPENAI_API_KEY'),
+    base_url=os.getenv('OPENAI_BASE_URL', 'https://yeysai.com/v1')
 )
 
 def clean_parse_result(result):

@@ -202,7 +202,7 @@ class Evaluator:
             input_content, output_content = self._get_turn_content(turn)
 
             # 重建轮次文本
-            if prompt and input_content:
+            if prompt:
                 lines.append(f"{prompt}{input_content}")
             elif input_content:
                 lines.append(input_content)

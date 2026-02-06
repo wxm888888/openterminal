@@ -1,8 +1,8 @@
 from openai import OpenAI
 
 client = OpenAI(
-    api_key='sk-vTUtgFvIecBHF9XpZvg0OVFYYexMSZGayAmtFKjWvX5PFt10',  # 替换为您的令牌
-    base_url='https://yeysai.com/v1'
+    api_key='<your api_key>',  # 替换为您的令牌
+    base_url='<your base_url>'
 )
 
 

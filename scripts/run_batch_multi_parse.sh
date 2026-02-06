@@ -3,8 +3,8 @@
 cd "$(dirname "$0")/.."
 
 # API Configuration
-export OPENAI_API_KEY="sk-vTUtgFvIecBHF9XpZvg0OVFYYexMSZGayAmtFKjWvX5PFt10"
-export OPENAI_BASE_URL="https://yeysai.com/v1"
+export OPENAI_API_KEY=""
+export OPENAI_BASE_URL=""
 
 # Configuration
 INPUT_DIR="data/test"

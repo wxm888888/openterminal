@@ -44,3 +44,4 @@ data/
 *.egg-info/
 samples/
 results/
+evaluation/result/

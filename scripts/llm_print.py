@@ -1,196 +1,46 @@
 import re
 import json
 import os
-import time
-from datetime import datetime
 from pathlib import Path
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
-    base_url=os.getenv('OPENAI_BASE_URL')
+    api_key='sk-vTUtgFvIecBHF9XpZvg0OVFYYexMSZGayAmtFKjWvX5PFt10',
+    base_url='https://yeysai.com/v1'
 )
 
-class TerminalParser:
-    def __init__(self, model_name='qwen3-8b', step4_model_name='claude-sonnet-4-20250514', save_raw_responses=True, save_json_results=True, file_id=None):
+class TerminalParser:    
+    def __init__(self, model_name='qwen3-8b', step4_model_name='claude-sonnet-4-20250514'):
         self.prompt_patterns = []
         self.model_name = model_name
         self.step4_model_name = step4_model_name
-        self.save_raw_responses = save_raw_responses
-        self.save_json_results = save_json_results
-        self.file_id = file_id
-
-    def _extract_json_from_response(self, response_text):
-        if not response_text or not isinstance(response_text, str):
-            raise ValueError("Empty or invalid response text")
-
-        text = response_text.strip()
-
-        # Strategy 1: Extract from ```json code block
-        if '```json' in text:
-            try:
-                json_content = text.split('```json')[1].split('```')[0].strip()
-                return json.loads(json_content)
-            except (IndexError, json.JSONDecodeError):
-                pass
-
-        # Strategy 2: Extract from generic ``` code block
-        if '```' in text:
-            try:
-                json_content = text.split('```')[1].split('```')[0].strip()
-                return json.loads(json_content)
-            except (IndexError, json.JSONDecodeError):
-                pass
-
-        # Strategy 3: Try parsing the entire text as JSON
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            pass
-
-        # Strategy 4: Find JSON object using brace matching
-        start_idx = text.find('{')
-        if start_idx != -1:
-            brace_count = 0
-            end_idx = -1
-            for i in range(start_idx, len(text)):
-                if text[i] == '{':
-                    brace_count += 1
-                elif text[i] == '}':
-                    brace_count -= 1
-                    if brace_count == 0:
-                        end_idx = i
-                        break
-            if end_idx != -1:
-                try:
-                    return json.loads(text[start_idx:end_idx + 1])
-                except json.JSONDecodeError:
-                    pass
-
-        # Strategy 5: Find JSON array using bracket matching
-        start_idx = text.find('[')
-        if start_idx != -1:
-            bracket_count = 0
-            end_idx = -1
-            for i in range(start_idx, len(text)):
-                if text[i] == '[':
-                    bracket_count += 1
-                elif text[i] == ']':
-                    bracket_count -= 1
-                    if bracket_count == 0:
-                        end_idx = i
-                        break
-            if end_idx != -1:
-                try:
-                    return json.loads(text[start_idx:end_idx + 1])
-                except json.JSONDecodeError:
-                    pass
-
-        # Strategy 6: Try to fix common JSON issues and parse again
-        # Remove trailing commas before } or ]
-        fixed_text = re.sub(r',\s*([}\]])', r'\1', text)
-        # Try extracting JSON object again from fixed text
-        start_idx = fixed_text.find('{')
-        if start_idx != -1:
-            brace_count = 0
-            end_idx = -1
-            for i in range(start_idx, len(fixed_text)):
-                if fixed_text[i] == '{':
-                    brace_count += 1
-                elif fixed_text[i] == '}':
-                    brace_count -= 1
-                    if brace_count == 0:
-                        end_idx = i
-                        break
-            if end_idx != -1:
-                try:
-                    return json.loads(fixed_text[start_idx:end_idx + 1])
-                except json.JSONDecodeError:
-                    pass
-
-        raise ValueError(f"Failed to extract JSON from response: {text[:200]}...")
-
-    def _save_raw_response(self, step_name, response_content, turn_id=None, request_time=None, response_time=None, inference_duration=None):
-        """Save the raw response from the model to the specified directory"""
-        if not self.save_raw_responses or not self.file_id:
-            return
-
-        # data/analysis/raw_response/{file_id}/{model_name}/step*
-        model_name = self.step4_model_name if step_name == "step4" else self.model_name
-        file_dir = Path(f"data/analysis/raw_response/{self.file_id}/{model_name}")
-        file_dir.mkdir(parents=True, exist_ok=True)
-
-        if turn_id is not None:
-            filename = f"{step_name}_turn{turn_id}.json"
-        else:
-            filename = f"{step_name}.json"
-
-        output_path = file_dir / filename
-
-        data_to_save = {
-            "file_id": self.file_id,
-            "step": step_name,
-            "turn_id": turn_id,
-            "model": self.model_name if step_name != "step4" else self.step4_model_name,
-            "raw_response": response_content
-        }
-
-        if request_time is not None:
-            data_to_save["request_time"] = request_time
-        if response_time is not None:
-            data_to_save["response_time"] = response_time
-        if inference_duration is not None:
-            data_to_save["inference_duration"] = inference_duration
-
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data_to_save, f, ensure_ascii=False, indent=2)
-
-    def _save_json_result(self, step_name, json_data):
-        """Save the extracted JSON data from each step to the specified directory"""
-        if not self.save_json_results or not self.file_id:
-            return
-
-        # data/analysis/json_results/{file_id}/{model_name}/step*
-        model_name = self.step4_model_name if step_name == "step4" else self.model_name
-        file_dir = Path(f"data/analysis/json_results/{self.file_id}/{model_name}")
-        file_dir.mkdir(parents=True, exist_ok=True)
-
-        filename = f"{step_name}.json"
-        output_path = file_dir / filename
-
-        data_to_save = {
-            "file_id": self.file_id,
-            "step": step_name,
-            "model_name": self.model_name if step_name != "step4" else self.step4_model_name,
-            "data": json_data
-        }
-
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(data_to_save, f, ensure_ascii=False, indent=2)
 
     async def step1_learn_prompts(self, file_path):
+        print(f"\n{'='*60}")
+        print(f"[Step 1] Learning prompt patterns from: {file_path}")
+        print(f"{'='*60}")
+
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             lines = [line.rstrip('\n') for line in f.readlines()]
 
+        print(f"Total lines in file: {len(lines)}")
         sample_text = '\n'.join(lines)
         
         system_prompt = """You are an expert in Terminal Prompt Recognition.
-TASK:
-- Analyze the provided terminal output text and identify all distinct prompt patterns.
-- For each identified prompt, generate a generic regex for the FIRST LINE of the identified prompt.
 
-Prompt Characteristics:
-- Contains dynamic information such as username, hostname, path, git branch, or virtual environment.
-- Ends with a special symbol (e.g., $, #, %, >, ★, ✗, etc.).
-- Is usually followed by a user-inputted command.
-- May be multi-line: Some prompts across two or more lines.
+Analyze the provided terminal output text and identify all distinct prompt patterns.
 
-IMPORTANT: Multiple prompt types may exist within a single terminal session due to:
+⚠️ IMPORTANT: Multiple prompt types may exist within a single terminal session due to:
 - Directory changes (cd command) changing the path.
 - Git branch switches changing the branch name.
 - Virtual environment activation/deactivation changing the environment prefix.
 - Permission changes (Standard user $ vs. Root #).
-- Context switching: Entering/exiting containers (Docker, LXC), remote servers (SSH), or sub-shells (mysql, python).
+
+Prompt Characteristics:
+- Contains dynamic information such as username, hostname, path, git branch, or virtual environment.
+- Ends with a special symbol (e.g., $, #, %, >, ★, ✗, etc.).
+- Follows a consistent format even if the specific content changes.
+- Is immediately followed by a user-inputted command.
 
 Key Requirements for Regex Generation:
 1. Generalization: The regex must be generic enough to match the same format even when content varies.
@@ -198,54 +48,47 @@ Key Requirements for Regex Generation:
    Correct: `^[^@]+@[^:]+:[^$]+\\$\\s*`
    Incorrect: `^user@host:/path1\\$\\s*` (Too specific; only matches path1).
 
-2. Scope: Do not include the trailing command in the match.
-   Example: For `➜ dir git:(main) ✗ command`, the match should stop after the `✗`.
+2. Scope: The regex must only match the prompt portion's FIRST LINE. Do not include the trailing command in the match.
+   Example: For `➜ dir git:(main) ✗ command`, the match should stop after the `✗` (including any trailing whitespace).
 
-3. Ending: The regex should end with `\\s*` (zero or more spaces). This ensures it matches the prompt even if no command followed it. Beginning: The regex MUST start with `^` (caret) to anchor the match at the beginning of a line.
+3. Ending: The regex should end with `\\s*` (zero or more spaces). This ensures it matches the prompt even if no command followed it.
 
-4. If a prompt is multi-line, generate a regex that matches ONLY the first line of the prompt.
+4. IMPORTANT: If a prompt is multi-line, generate a regex that matches ONLY the first line of the prompt.
    - Do NOT generate a separate regex for the second line.
+   - The second line should be treated as part of the command input, not a prompt.
 
 5. Exhaustiveness: Identify every uniquely formatted prompt, even if it only appears once in the text.
 
-Return the result in JSON format (wrapped in ```json code block):
-```json
+Return the result in JSON format:
 {
   "patterns": [
     {
-      "complete_prompt": "Complete prompt (without command)",
-      "regex_for_firstline": "Generic regex matching ONLY the prompt FIRST LINE (starting with ^, ending in \\\\s*)",
+      "example": "Full example line including the command",
+      "regex": "Generic regex matching ONLY the prompt FIRST LINE (ending in \\\\s*)",
       "description": "Explanation of the characteristics of this pattern"
     }
   ]
 }
-```
 
 Example Output:
-```json
 {
   "patterns": [
     {
-      "complete_prompt": "user@host:~/dir1$ ",
-      "regex_for_firstline": "^[^@]+@[^:]+:[^$]+\\\\$\\\\s*",
+      "example": "user@host:~/dir1$ cd /tmp",
+      "regex": "^[^@]+@[^:]+:[^$]+\\\\$\\\\s*",
       "description": "Standard Bash prompt: user@host:path$"
     },
     {
-      "complete_prompt": "user@host|~/dir\\n> ",
-      "regex_for_firstline": "^[^@]+@[^|]+\\|[^\\n]+\\s*",
+      "example": "user@host|~/dir\\n> ls",
+      "regex": "^[^@]+@[^|]+\\|[^\\n]+\\s*",
       "description": "Two-line prompt: first line user@host|path; do NOT create regex for the '>' line"
     }
   ]
 }
-```
 
-Note: Ensure the regex uses double backslashes for escaping (e.g., \\s*) to remain valid within the JSON string.
-IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any additional explanation or text."""
+Note: Ensure the regex uses double backslashes for escaping (e.g., \\s*) to remain valid within the JSON string."""
         
         try:
-            request_time = datetime.now().isoformat()
-            start_time = time.time()
-
             response = await client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -254,7 +97,7 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
 Important Notes:
 - Prompts with the same format but different paths/branches should share ONE generic regex.
 - However, if formats are completely different (e.g., bash-style vs. zsh-style), identify them separately.
-- For multi-line prompts: provide the complete prompt in complete_prompt, but regex_for_firstline should ONLY match the first line.
+- Ensure the regex is generic enough to match dynamic content (paths, branches, environment names, etc.).
 
 Terminal Output:
 {sample_text}
@@ -263,99 +106,119 @@ Please return generic regex patterns for all prompt types."""}
                 ],
                 model=self.model_name
             )
-
-            end_time = time.time()
-            response_time = datetime.now().isoformat()
-            inference_duration = end_time - start_time
-
-            self._save_raw_response("step1", response.model_dump(),
-                                   request_time=request_time,
-                                   response_time=response_time,
-                                   inference_duration=inference_duration)
-
+            
             result = response.choices[0].message.content
+            
+            if '```json' in result:
+                result = result.split('```json')[1].split('```')[0]
+            elif '```' in result:
+                result = result.split('```')[1].split('```')[0]
+            
+            data = json.loads(result)
 
-            data = self._extract_json_from_response(result)
+            print(f"\n[Step 1] LLM identified {len(data.get('patterns', []))} prompt patterns:")
 
             for item in data.get('patterns', []):
-                pattern = item.get('regex_for_firstline', '')
+                pattern = item.get('regex', '')
                 if pattern:
                     cleaned = re.sub(r'\(\?<[^>]+>', '(', pattern)
 
                     try:
                         re.compile(cleaned)
                         self.prompt_patterns.append(cleaned)
+                        print(f"  ✓ Pattern: {cleaned[:80]}")
+                        print(f"    Example: {item.get('example', 'N/A')[:80]}")
                     except re.error:
+                        print(f"  ✗ Invalid pattern (skipped): {cleaned[:80]}")
                         pass
 
-            # Save step1 extracted JSON data
-            self._save_json_result("step1", data)
-
+            print(f"\n[Step 1] Result: {len(self.prompt_patterns)} valid patterns learned")
             return len(self.prompt_patterns) > 0
 
         except Exception as e:
+            print(f"\n[Step 1] Error: {str(e)}")
             return False
     
     async def step2_filter_fake_prompts(self, file_path):
+        print(f"\n{'='*60}")
+        print(f"[Step 2] Filtering fake prompts")
+        print(f"{'='*60}")
+
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
         
         candidate_prompts = []
+        matched_line_nums = set()
         
-        for line_num, line in enumerate(lines, 1):       
+        for line_num, line in enumerate(lines, 1):
+            if line_num in matched_line_nums:
+                continue
+                
             line_content = line.rstrip('\n')
+            
             matched = False
             matched_pattern = None
+            matched_lines = 1
             
             for pattern in self.prompt_patterns:
                 try:
                     if re.match(pattern, line_content):
                         matched = True
                         matched_pattern = pattern
+                        matched_lines = 1
                         break
                 except re.error:
                     continue
             
             if matched:
+                matched_line_nums.add(line_num)
+                
                 candidate_prompts.append({
                     'line_num': line_num,
                     'content': line_content,
                     'prev_line': lines[line_num-2].rstrip('\n') if line_num > 1 else '',
                     'next_line': lines[line_num].rstrip('\n') if line_num < len(lines) else '',
+                    'is_multiline': False,
+                    'num_lines': 1
                 })
 
         if not candidate_prompts:
-            return set(), set()
+            print(f"\n[Step 2] No candidate prompts found by regex matching")
+            return set()
 
-        confirmed, false_positives = await self._filter_with_llm(candidate_prompts)
+        print(f"\n[Step 2] Found {len(candidate_prompts)} candidate prompts by regex")
+        print(f"[Step 2] Sending to LLM for verification...")
 
-        return confirmed, false_positives
+        confirmed_line_nums = await self._filter_with_llm(candidate_prompts)
+
+        print(f"\n[Step 2] Result: {len(confirmed_line_nums)} confirmed real prompts")
+        print(f"[Step 2] Confirmed line numbers: {sorted(list(confirmed_line_nums))[:10]}{'...' if len(confirmed_line_nums) > 10 else ''}")
+
+        return confirmed_line_nums
     
     async def _filter_with_llm(self, candidates):
         system_prompt = """You are an expert in Terminal Prompt Verification. Determine which lines are real prompts and which are just text that happens to match the regex pattern.
 
 Real Prompt Characteristics:
 1. Position: Usually appears after command output, before a new command.
-2. Function: Marks the beginning of new user input.
+2. Context: Previous line is command output (or blank), followed by a command (or blank).
+3. Function: Marks the beginning of new user input.
 
-False Positives (should be filtered), for example:
+False Positives (should be filtered):
 1. Text in command output that resembles a prompt
    Example: echo "user@host:~$ this is just text"
 2. Text in program logs or error messages
 3. Text in file contents or code snippets
 
-Return JSON format (wrapped in ```json code block):
-```json
+Return JSON format:
 {
-  "confirmed_prompts": [list of line numbers for real prompts (If it's a multi-line prompt, return the line number of the first line)],
+  "confirmed_prompts": [list of line numbers for real prompts],
   "false_positives": [
     {"line_num": line number of false prompt, "reason": "why it's considered false"}
   ]
 }
-```
 
-Note: The prompt may be multi-line. If so, only return the line number of the FIRST line of the prompt in confirmed_prompts.
-IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any additional explanation or text."""
+Note: If uncertain, lean towards considering it a real prompt (conservative strategy)."""
         
         candidates_text = []
         for c in candidates:
@@ -367,43 +230,36 @@ Line {c['line_num']}:
 """)
         
         try:
-            request_time = datetime.now().isoformat()
-            start_time = time.time()
-
             response = await client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"Determine which of the following candidate lines mark the beginning of real prompts::{''.join(candidates_text)}\n\nPlease analyze line by line and provide a list of confirmed real prompt line numbers."}
+                    {"role": "user", "content": f"Determine which of the following candidate lines are real prompts:{''.join(candidates_text)}\n\nPlease analyze line by line and provide a list of confirmed real prompt line numbers."}
                 ],
                 model=self.model_name,
                 temperature=0.3
             )
-
-            end_time = time.time()
-            response_time = datetime.now().isoformat()
-            inference_duration = end_time - start_time
-
-            self._save_raw_response("step2", response.model_dump(),
-                                   request_time=request_time,
-                                   response_time=response_time,
-                                   inference_duration=inference_duration)
-
+            
             result = response.choices[0].message.content
-
-            data = self._extract_json_from_response(result)
-
+            
+            if '```json' in result:
+                result = result.split('```json')[1].split('```')[0]
+            elif '```' in result:
+                result = result.split('```')[1].split('```')[0]
+            
+            data = json.loads(result)
+            
             confirmed = set(data.get('confirmed_prompts', []))
-            false_positives = set(fp['line_num'] for fp in data.get('false_positives', []))
-
-            # Save step2 extracted JSON data
-            self._save_json_result("step2", data)
-
-            return confirmed, false_positives
-
+            
+            return confirmed
+        
         except Exception:
-            return set(c['line_num'] for c in candidates), set()
+            return set(c['line_num'] for c in candidates)
     
     async def step3_parse_turns(self, file_path, confirmed_line_nums):
+        print(f"\n{'='*60}")
+        print(f"[Step 3] Parsing turns from confirmed prompts")
+        print(f"{'='*60}")
+
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
         
@@ -429,7 +285,7 @@ Line {c['line_num']}:
                         match = re.match(pattern, line)
                         if match:
                             is_prompt = True
-                            matched_pattern = (pattern, match)
+                            matched_pattern = (pattern, match, 1)
                             break
                     except re.error:
                         continue
@@ -441,7 +297,7 @@ Line {c['line_num']}:
                 in_initial = False
                 turn_id += 1
                 
-                pattern_str, match = matched_pattern
+                pattern_str, match, _ = matched_pattern
                 
                 prompt_str = line[:match.end()]
                 
@@ -467,20 +323,27 @@ Line {c['line_num']}:
         
         result["initial_output"] = '\n'.join(initial_lines)
 
+        print(f"\n[Step 3] Parsed {len(result['turns'])} turns")
+        print(f"[Step 3] Initial output: {len(initial_lines)} lines")
 
         if result['turns']:
+            print(f"[Step 3] Classifying actions and observations with LLM...")
             import asyncio
             tasks = []
             for turn in result['turns']:
                 tasks.append(self._llm_classify_action_observation(turn))
             await asyncio.gather(*tasks)
 
-        step3_concatenated_data = {
-            "initial_output": result["initial_output"],
-            "total_turns": len(result["turns"]),
-            "turns": result["turns"]
-        }
-        self._save_json_result("step3", step3_concatenated_data)
+            print(f"[Step 3] Turn classification completed")
+            for i, turn in enumerate(result['turns'][:3], 1):
+                print(f"  Turn {i}: action={len(turn['action']['content'])} chars, obs={len(turn['observation']['content'])} chars")
+            if len(result['turns']) > 3:
+                print(f"  ... and {len(result['turns']) - 3} more turns")
+
+        # 删除仅用于内部处理的 raw_lines 字段
+        for turn in result['turns']:
+            if 'raw_lines' in turn:
+                del turn['raw_lines']
 
         return result
 
@@ -496,21 +359,20 @@ Key Principles:
 4. Command parameters/arguments that span multiple lines are part of the action
 5. Everything after the complete command is the observation (output)
 6. The prompt itself is NOT part of the action content
-7. Extract text EXACTLY as it appears in the raw lines. Do NOT add or remove any characters (including spaces). If the raw line is ">", the prompt should end with ">" not "> ".
 
 Common Patterns:
-- Single-line prompt: "user@host:~$ command" - prompt is "user@host:~$ "
-- Multi-line prompt: "user@host|~/path\\n> command" - prompt is "user@host|~/path\\n> "
+- Single-line prompt: "user@host:~$ command" - prompt is "user@host:~$"
+- Multi-line prompt: "user@host|~/path\\n> command" - prompt is "user@host|~/path\\n>"
 - Multi-line command (e.g., with \\): Multiple lines form the command, then output follows
+- Here-doc (<<EOF): Everything until EOF is part of the command input
+- Interactive commands: May have interleaved input/output
 
-Return JSON format (wrapped in ```json code block):
-```json
+Return JSON format:
 {
   "prompt": "The complete prompt (may be multi-line, use \\n for line breaks)",
   "action_lines": ["line1 of command", "line2 of command", ...],
   "observation_lines": ["line1 of output", "line2 of output", ...]
 }
-```
 
 Example 1 - Single line prompt:
 Raw lines:
@@ -548,15 +410,11 @@ Raw lines:
   Unable to find image 'nginx:latest' locally。
 
 Result:
-```json
 {
   "prompt": "$ ",
   "action_lines": ["docker run \\", "--name test \\", "-p 8080:80 \\", "nginx"],
   "observation_lines": ["Unable to find image 'nginx:latest' locally"]
-}
-```
-
-IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any additional explanation or text."""
+}"""
 
         raw_lines_text = '\n'.join([
             f"  {i+1}. {line}"
@@ -568,14 +426,11 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
 [Raw Lines] ({len(turn['raw_lines'])} line(s))
 {raw_lines_text}
 
-[Prompt first line detected by regex]: {turn['prompt']}
+[Initial prompt detected by regex]: {turn['prompt']}
 
 Please extract the complete prompt (including all prompt lines if multi-line), the action lines (command without prompt) as a list, and observation lines (output) as a list."""
 
         try:
-            request_time = datetime.now().isoformat()
-            start_time = time.time()
-
             response = await client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -585,24 +440,16 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
                 temperature=0.2
             )
 
-            end_time = time.time()
-            response_time = datetime.now().isoformat()
-            inference_duration = end_time - start_time
-
-            self._save_raw_response(
-                "step3",
-                response.model_dump(),
-                turn_id=turn['turn_id'],
-                request_time=request_time,
-                response_time=response_time,
-                inference_duration=inference_duration
-            )
-
             result = response.choices[0].message.content
 
-            data = self._extract_json_from_response(result)
+            if '```json' in result:
+                result = result.split('```json')[1].split('```')[0]
+            elif '```' in result:
+                result = result.split('```')[1].split('```')[0]
 
-            extracted_prompt = data.get('prompt', '')
+            data = json.loads(result)
+
+            extracted_prompt = data.get('prompt', '').strip()
             if extracted_prompt:
                 turn['prompt'] = extracted_prompt
 
@@ -612,20 +459,11 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
             else:
                 turn['action']['content'] = str(action_lines).strip()
 
-            # try to extract observation from raw_lines using prompt + action as prefix
-            raw_text = '\n'.join(turn['raw_lines']) if turn.get('raw_lines') else ''
-            prefix = turn['prompt'] + turn['action']['content']
-
-            if raw_text.startswith(prefix):
-                turn['observation']['content'] = raw_text[len(prefix):].strip()
-                turn['prefix_matched'] = True
+            obs_lines = data.get('observation_lines', [])
+            if isinstance(obs_lines, list):
+                turn['observation']['content'] = '\n'.join([line for line in obs_lines if line.strip()])
             else:
-                obs_lines = data.get('observation_lines', [])
-                if isinstance(obs_lines, list):
-                    turn['observation']['content'] = '\n'.join([line for line in obs_lines if line.strip()])
-                else:
-                    turn['observation']['content'] = str(obs_lines).strip()
-                turn['prefix_matched'] = False
+                turn['observation']['content'] = str(obs_lines).strip()
 
         except Exception:
             if turn['raw_lines']:
@@ -639,18 +477,23 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
                 turn['observation']['content'] = '\n'.join([
                     line for line in turn['raw_lines'][1:] if line.strip()
                 ])
-            turn['prefix_matched'] = False
     
     async def step4_verify_turns(self, input_file, parsed_result):
+        print(f"\n{'='*60}")
+        print(f"[Step 4] Verifying turns with LLM")
+        print(f"{'='*60}")
 
         turns = parsed_result.get('turns', [])
-        initial_output = parsed_result.get('initial_output', '')
-
-        if not turns and not initial_output:
+        if not turns:
+            print(f"[Step 4] No turns to verify")
             return []
+
+        print(f"[Step 4] Verifying {len(turns)} turns...")
 
         with open(input_file, 'r', encoding='utf-8', errors='ignore') as f:
             raw_text = f.read()
+
+        initial_output = parsed_result.get('initial_output', '')
 
         system_prompt = """You are an expert in Terminal Turn Verification.
 You will receive:
@@ -660,18 +503,17 @@ You will receive:
 Your task:
 1. FIRST: Check if initial_output contains any missed command executions (command-output pairs that were not parsed as turns). If found, extract them as new turns AND rewrite the corrected initial_output by removing those command executions. The initial_output must contain all raw text content occurring strictly before the very first command-line prompt, which typically includes system login banners (e.g., "Welcome to Ubuntu..."), "Last login" timestamps, or environment initialization logs. Note that the initial_output can be an empty string
 2. SECOND: If no missed command executions were found, check if initial_output is correctly extracted
-3. THIRD: If a single turn actually contains MULTIPLE command executions (multiple prompts, commands and outputs), split it into multiple turns
-4. FOURTH: For EACH turn, determine whether there are writing/segmentation mistakes in the parsed result. If correction is needed, return corrected action and observation content
+3. THIRD: For EACH turn, determine whether there are writing/segmentation mistakes in the parsed result. If correction is needed, return corrected action and observation content
+4. FOURTH: If a single turn actually contains MULTIPLE command executions (multiple prompts, commands and outputs), split it into multiple turns
 
-Return JSON format (wrapped in ```json code block):
-```json
+Return JSON format:
 {
   "initial_output_correct": true/false,
   "initial_output_issue": "If incorrect, describe the issue",
   "corrected_initial_output": "Corrected initial output if needed",
   "missed_turns_in_initial_output": [
     {
-      "prompt": "The prompt string (may be empty string \"\" before command)",
+      "prompt": "The prompt string (may be empty string \"\" if no prompt detected)",
       "action": { "content": "The command content" },
       "observation": { "content": "The command output" }
     },
@@ -704,7 +546,6 @@ Return JSON format (wrapped in ```json code block):
     ...
   ]
 }
-```
 
 Rules:
 - Always use the raw txt as ground truth
@@ -712,20 +553,18 @@ Rules:
   * Check if initial_output contains any missed command executions (command-output pairs that should have been parsed as turns)
   * If found: set initial_output_correct=false, add them to missed_turns_in_initial_output array, AND provide corrected_initial_output by removing the command execution content (keep only the true initial content before any commands)
   * If no missed turns found: omit missed_turns_in_initial_output field, then proceed to check initial_output correctness
-- Then check initial_output correctness :
+- Then check initial_output correctness (only if no missed turns were found):
   * If correct: set initial_output_correct=true, and omit both initial_output_issue and corrected_initial_output
   * If incorrect: set initial_output_correct=false, provide initial_output_issue describing the problem, and provide corrected_initial_output with the corrected content
 - For each turn, first check if it contains multiple command executions (multiple prompts or multiple command-output pairs):
-  * If yes: set should_split=true, then provide split_into_turns array with 2 or more turns, and do NOT provide corrected_turn
+  * If yes: set should_split=true, then provide split_into_turns array with 2+ turns, and do NOT provide corrected_turn
   * When splitting turns, the "prompt" field may be empty string "" if no prompt is detected before a command
   * If no: continue to next step
 - If the turn doesn't need splitting, check if there are writing/segmentation mistakes:
   * If the turn is correct: set is_correct=true, should_split=false, and omit both corrected_turn and split_into_turns
   * If the turn has mistakes but doesn't need splitting: set is_correct=false, should_split=false, then provide corrected_turn with the corrected content, and omit split_into_turns
-- The "prompt" field can be an empty string "" if there is no command-line prompt before the command (e.g., in scripts automated environments). Always check for this case when splitting turns or extracting missed turns from initial_output
-
-IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any additional explanation or text."""
-
+- The "prompt" field can be an empty string "" if there is no command-line prompt before the command (e.g., in scripts or automated environments). Always check for this case when splitting turns or extracting missed turns from initial_output"""
+  
 
         user_message = json.dumps({
             "raw_txt": raw_text,
@@ -739,9 +578,6 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
         missed_count = 0
 
         try:
-            request_time = datetime.now().isoformat()
-            start_time = time.time()
-
             response = await client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -751,28 +587,24 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
                 temperature=0.2
             )
 
-            end_time = time.time()
-            response_time = datetime.now().isoformat()
-            inference_duration = end_time - start_time
-
-            self._save_raw_response("step4", response.model_dump(),
-                                   request_time=request_time,
-                                   response_time=response_time,
-                                   inference_duration=inference_duration)
-
             result = response.choices[0].message.content
 
-            data = self._extract_json_from_response(result)
+            if '```json' in result:
+                result = result.split('```json')[1].split('```')[0]
+            elif '```' in result:
+                result = result.split('```')[1].split('```')[0]
 
-            # Save step4 extracted JSON data
-            self._save_json_result("step4", data)
+            data = json.loads(result)
 
             missed_turns = data.get('missed_turns_in_initial_output', [])
             missed_count = len(missed_turns)
             if missed_turns:
+                print(f"[Step 4] ✓ Found {len(missed_turns)} missed turns in initial_output")
 
-                if 'corrected_initial_output' in data:
-                    parsed_result['initial_output'] = data.get('corrected_initial_output', '')
+                corrected_initial = data.get('corrected_initial_output', '')
+                if corrected_initial:
+                    parsed_result['initial_output'] = corrected_initial
+                    print(f"[Step 4] ✓ Initial output corrected (removed command executions)")
 
                 for mt in reversed(missed_turns):
                     new_turn = {
@@ -788,12 +620,17 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
                     turns.insert(0, new_turn)
             else:
                 if not data.get('initial_output_correct', True):
-                    if 'corrected_initial_output' in data:
-                        parsed_result['initial_output'] = data.get('corrected_initial_output', '')
+                    corrected_initial = data.get('corrected_initial_output', '')
+                    if corrected_initial:
+                        parsed_result['initial_output'] = corrected_initial
+                        print(f"[Step 4] ✓ Initial output corrected")
+                else:
+                    print(f"[Step 4] ✓ Initial output is correct")
 
             verification_results = data.get('turns', [])
 
         except Exception as e:
+            print(f"[Step 4] Error during verification: {str(e)}")
             verification_results = [
                 {
                     'turn_id': t.get('turn_id'),
@@ -836,6 +673,13 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
             else:
                 correct_count += 1
 
+        print(f"\n[Step 4] Verification summary:")
+        print(f"  - Correct turns: {correct_count}")
+        print(f"  - Corrected turns: {corrected_count}")
+        print(f"  - Turns to split: {split_count}")
+        if missed_count > 0:
+            print(f"  - Missed turns found in initial_output: {missed_count}")
+
         for insert_idx, split_turns in sorted(turns_to_insert, reverse=True):
             new_turns = []
             for st in split_turns:
@@ -856,26 +700,26 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
         for i, turn in enumerate(turns, 1):
             turn['turn_id'] = i
 
-        for turn in turns:
-            if 'raw_lines' in turn:
-                del turn['raw_lines']
+        print(f"[Step 4] Final result: {len(turns)} turns after processing")
 
         return verification_results
+    
+async def parse_terminal_file(input_file, parsed_output=None, verified_output=None, model_name='gpt-5.2-2025-12-11', step4_model_name='claude-sonnet-4-20250514'):
+    print(f"\n{'#'*60}")
+    print(f"# Terminal File Parsing Started")
+    print(f"# Input: {input_file}")
+    print(f"# Model: {model_name}")
+    print(f"# Step4 Model: {step4_model_name}")
+    print(f"{'#'*60}")
 
-async def parse_terminal_file(input_file, parsed_output=None, verified_output=None, model_name='gpt-5.2-2025-12-11', step4_model_name='claude-sonnet-4-20250514', save_raw_responses=True, save_json_results=True):
-
-    file_id = None
-    if save_raw_responses or save_json_results:
-        file_id = Path(input_file).stem
-
-    parser = TerminalParser(model_name=model_name, step4_model_name=step4_model_name, save_raw_responses=save_raw_responses, save_json_results=save_json_results, file_id=file_id)
+    parser = TerminalParser(model_name=model_name, step4_model_name=step4_model_name)
     
     success = await parser.step1_learn_prompts(input_file)
     if not success or len(parser.prompt_patterns) == 0:
         parser.prompt_patterns = [r'^[\$\#\%>]\s*']
     
-    confirmed_line_nums, false_positive_nums = await parser.step2_filter_fake_prompts(input_file)
-    if not confirmed_line_nums and not false_positive_nums:
+    confirmed_line_nums = await parser.step2_filter_fake_prompts(input_file)
+    if not confirmed_line_nums:
         with open(input_file, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
         confirmed_line_nums = set()
@@ -902,21 +746,26 @@ async def parse_terminal_file(input_file, parsed_output=None, verified_output=No
     if parsed_output:
         with open(parsed_output, 'w', encoding='utf-8') as f:
             json.dump(parsed_result, f, ensure_ascii=False, indent=2)
+        print(f"\n[Output] Parsed result saved to: {parsed_output}")
 
     verification_results = []
-    if len(parsed_data['turns']) > 0 or parsed_data['initial_output']:
+    if len(parsed_data['turns']) > 0:
         import copy
         turns_for_verification = copy.deepcopy(parsed_data['turns'])
         parsed_for_verification = {
+            "file_path": input_file,
+            "total_turns": len(turns_for_verification),
             "initial_output": parsed_data["initial_output"],
-            "turns": turns_for_verification
+            "turns": turns_for_verification,
+            "learned_patterns": parser.prompt_patterns,
+            "confirmed_prompt_lines": sorted(list(confirmed_line_nums))
         }
         verification_results = await parser.step4_verify_turns(input_file, parsed_for_verification)
         
         verified_result = {
             "file_path": input_file,
             "total_turns": len(turns_for_verification),
-            "initial_output": parsed_for_verification['initial_output'],
+            "initial_output": parsed_data["initial_output"],
             "turns": turns_for_verification,
             "learned_patterns": parser.prompt_patterns,
             "confirmed_prompt_lines": sorted(list(confirmed_line_nums)),
@@ -926,33 +775,39 @@ async def parse_terminal_file(input_file, parsed_output=None, verified_output=No
         if verified_output:
             with open(verified_output, 'w', encoding='utf-8') as f:
                 json.dump(verified_result, f, ensure_ascii=False, indent=2)
+            print(f"[Output] Verified result saved to: {verified_output}")
     else:
         verified_result = parsed_result
 
-    final_result = verified_result
+    final_result = verified_result if len(parsed_data['turns']) > 0 else parsed_result
+
+    print(f"\n{'#'*60}")
+    print(f"# Parsing Complete!")
+    print(f"# Total turns: {final_result.get('total_turns', 0)}")
+    print(f"{'#'*60}\n")
 
     return final_result
 
-async def one_model_parse_async(input_file, model_name='qwen3-coder-30b-a3b-instruct', step4_model_name='gpt-5.2-2025-12-11', save_raw_responses=True, save_json_results=True):
+async def one_model_parse_async(input_file, model_name='gpt-5.2-2025-12-11', step4_model_name=None):
+    # 如果没有指定 step4_model_name，则使用与 model_name 相同的模型
+    if step4_model_name is None:
+        step4_model_name = model_name
+    
     result = await parse_terminal_file(
         input_file=input_file,
         parsed_output=None,
         verified_output=None,
         model_name=model_name,
-        step4_model_name=step4_model_name,
-        save_raw_responses=save_raw_responses,
-        save_json_results=save_json_results
+        step4_model_name=step4_model_name
     )
     return result
 
 if __name__ == "__main__":
     import asyncio
     result = asyncio.run(parse_terminal_file(
-        input_file='data/raw/txt/39675.txt',
-        parsed_output='data/analyzed/39675_parsed_async.json',
-        verified_output='data/analyzed/39675_verified_async.json',
-        model_name='kimi-k2-instruct',
-        step4_model_name='kimi-k2-instruct',
-        save_raw_responses=True,
-        save_json_results=True
+        input_file='data/raw/txt/100024.txt',
+        parsed_output='data/analyzed/100024_parsed_async.json',
+        verified_output='data/analyzed/100024_verified_async.json',
+        model_name='gemini-1.5-flash',
+        step4_model_name='gemini-1.5-flash'
     ))

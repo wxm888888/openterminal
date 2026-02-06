@@ -1,0 +1,93 @@
+code/ascii.io (1.9.2-p318@asciiio) (master?) % cap deploy
+  * 12:49:34 == Currently executing `deploy'
+  * 12:49:34 == Currently executing `deploy:update'
+ ** transaction: start
+  * 12:49:34 == Currently executing `deploy:update_code'
+    executing locally: "git ls-remote git://github.com/sickill/ascii.io.git master"
+    command finished in 659ms
+  * executing "git clone -q git://github.com/sickill/ascii.io.git ~/app/releases/20120311114935 && cd ~/app/releases/20120311114935 && git checkout -q -b deploy 66b153c2d239ef5aa93041e5f7443c342918cdb6 && (echo 66b153c2d239ef5aa93041e5f7443c342918cdb6 > ~/app/releases/20120311114935/REVISION)"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'git clone -q git://github.com/sickill/ascii.io.git ~/app/releases/20120311114935 && cd ~/app/releases/20120311114935 && git checkout -q -b deploy 66b153c2d239ef5aa93041e5f7443c342918cdb6 && (echo 66b153c2d239ef5aa93041e5f7443c342918cdb6 > ~/app/releases/20120311114935/REVISION)'
+    command finished in 1896ms
+  * 12:49:38 == Currently executing `deploy:finalize_update'
+  * executing "chmod -R g+w ~/app/releases/20120311114935"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'chmod -R g+w ~/app/releases/20120311114935'
+    command finished in 903ms
+  * executing "rm -rf ~/app/releases/20120311114935/log ~/app/releases/20120311114935/public/system ~/app/releases/20120311114935/tmp/pids &&\\\n      mkdir -p ~/app/releases/20120311114935/public &&\\\n      mkdir -p ~/app/releases/20120311114935/tmp"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'rm -rf ~/app/releases/20120311114935/log ~/app/releases/20120311114935/public/system ~/app/releases/20120311114935/tmp/pids &&\
+    [ascii.io] mkdir -p ~/app/releases/20120311114935/public &&\
+    [ascii.io] mkdir -p ~/app/releases/20120311114935/tmp'
+    command finished in 713ms
+  * executing "ln -s ~/app/shared/system ~/app/releases/20120311114935/public/system"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'ln -s ~/app/shared/system ~/app/releases/20120311114935/public/system'
+    command finished in 911ms
+  * executing "ln -s ~/app/shared/log ~/app/releases/20120311114935/log"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'ln -s ~/app/shared/log ~/app/releases/20120311114935/log'
+    command finished in 1103ms
+  * executing "ln -s ~/app/shared/pids ~/app/releases/20120311114935/tmp/pids"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'ln -s ~/app/shared/pids ~/app/releases/20120311114935/tmp/pids'
+    command finished in 2326ms
+  * executing "find ~/app/releases/20120311114935/public/images ~/app/releases/20120311114935/public/stylesheets ~/app/releases/20120311114935/public/javascripts -exec touch -t 201203111149.44 {} ';'; true"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] env TZ=UTC rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'find ~/app/releases/20120311114935/public/images ~/app/releases/20120311114935/public/stylesheets ~/app/releases/20120311114935/public/javascripts -exec touch -t 201203111149.44 {} '\'';'\''; true'
+*** [err :: ascii.io] find: `/home/asciiio/app/releases/20120311114935/public/images'
+*** [err :: ascii.io] : No such file or directory
+*** [err :: ascii.io] find: `/home/asciiio/app/releases/20120311114935/public/stylesheets': No such file or directory
+*** [err :: ascii.io] find: `/home/asciiio/app/releases/20120311114935/public/javascripts': No such file or directory
+*** [err :: ascii.io]
+    command finished in 1334ms
+    triggering after callbacks for `deploy:finalize_update'
+  * 12:49:45 == Currently executing `bundle:install'
+  * executing "ls -x ~/app/releases"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'ls -x ~/app/releases'
+    command finished in 887ms
+  * executing "cd ~/app/releases/20120311114935 && bundle install --gemfile ~/app/releases/20120311114935/Gemfile --path ~/app/shared/bundle --deployment --quiet --without development test"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'cd ~/app/releases/20120311114935 && bundle install --gemfile ~/app/releases/20120311114935/Gemfile --path ~/app/shared/bundle --deployment --quiet --without development test'
+    command finished in 1405ms
+    triggering after callbacks for `deploy:update_code'
+  * 12:49:47 == Currently executing `deploy:symlink_shared'
+  * executing "ln -nfs ~/app/shared/config/database.yml ~/app/releases/20120311114935/config/database.yml && ln -nfs ~/app/shared/config/local.yml ~/app/releases/20120311114935/config/local.yml"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'ln -nfs ~/app/shared/config/database.yml ~/app/releases/20120311114935/config/database.yml && ln -nfs ~/app/shared/config/local.yml ~/app/releases/20120311114935/config/local.yml'
+    command finished in 565ms
+  * 12:49:48 == Currently executing `deploy:assets_precompile'
+  * executing "cd ~/app/releases/20120311114935; RAILS_ENV=production bundle exec rake assets:precompile"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'cd ~/app/releases/20120311114935; RAILS_ENV=production bundle exec rake assets:precompile'
+*** [err :: ascii.io] /usr/local/rvm/rubies/ruby-1.9.3-p125/bin/ruby /home/asciiio/app/shared/bundle/ruby/1.9.1/bin/rake assets:precompile:all RAILS_ENV=production RAILS_GROUPS=assets
+    command finished in 39800ms
+  * 12:50:28 == Currently executing `deploy:create_symlink'
+  * 12:50:28 == Currently executing `deploy:symlink'
+[Deprecation Warning] This API has changed, please hook `deploy:create_symlink` instead of `deploy:symlink`.
+  * executing "rm -f ~/app/current && ln -s ~/app/releases/20120311114935 ~/app/current"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'rm -f ~/app/current && ln -s ~/app/releases/20120311114935 ~/app/current'
+    command finished in 857ms
+ ** transaction: commit
+  * 12:50:29 == Currently executing `deploy:restart'
+  * executing "touch ~/app/current/tmp/restart.txt"
+    servers: ["ascii.io"]
+    [ascii.io] executing command
+    [ascii.io] rvm_path=/usr/local/rvm /usr/local/rvm/bin/rvm-shell 'default' -c 'touch ~/app/current/tmp/restart.txt'
+    command finished in 576ms
+code/ascii.io (1.9.2-p318@asciiio) (master?) % Allright!!!
+code/ascii.io (1.9.2-p318@asciiio) (master?) %

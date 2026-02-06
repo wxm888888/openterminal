@@ -1,0 +1,3 @@
+code/ascii.io (1.9.2-p318@asciiio) (master*?) % sdfsfd
+zsh: command not found: sdfsfd
+code/ascii.io (1.9.2-p318@asciiio) (master*?) %

@@ -1,0 +1,66 @@
+bash-3.2$ yarn global add invig@0.0.9
+yarn global v0.19.1
+warning No license field
+[1/4] 🔍  Resolving packages...
+[2/4] 🚚  Fetching packages...
+[3/4] 🔗  Linking dependencies...
+warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-promise@^4".
+[4/4] 📃  Building fresh packages...
+success Installed "invig@0.0.9" with binaries:
+      - invig
+warning No license field
+✨  Done in 2.48s.
+bash-3.2$ cd ~/code/node-sdk/
+bash-3.2$ ls -al src/
+total 32
+drwxr-xr-x   4 kvz  staff    136 Jan 20 11:16 .
+drwxrwx---  16 kvz  staff    544 Jan 20 11:16 ..
+-rw-r--r--   1 kvz  staff    756 Jan 20 11:16 PaginationStream.coffee
+-rw-r--r--   1 kvz  staff  10518 Jan 20 10:26 TransloaditClient.coffee
+bash-3.2$ vim src/PaginationStream.coffee
+bash-3.2$ invig -V
+0.0.9
+bash-3.2$ invig --src src/PaginationStream.coffee
+ ✔ invig ❯ npm ❯ Adding npm task project config
+ ✔ invig ❯ npm ❯ Adding dependencies task project config
+ ✔ invig ❯ toEslintStandard ❯ Writing eslint project config
+ ✔ invig ❯ toEs6 ❯ Writing babel project config
+ ✔ invig ❯ toJs ❯ Writing eslint ignores
+ ✔ invig ❯ init ❯ Writing back project config
+ ✔ invig ❯ init ❯ Running npm install to accomodate these changes: Add babel-cli to devDependencies. Add babel-core to devDependencies. Add babel-eslint to devDependencies. Add babel-plugin-add-module-exports to devDependencies. Add babel-plugin-es6-promise to devDependencies. Add babel-plugin-syntax-async-functions to devDependencies. Add babel-plugin-transform-async-to-generator to devDependencies. Add babel-plugin-transform-object-assign to devDependencies. Add babel-preset-es2015 to devDependencies. Add eslint to devDependencies. Add eslint-config-standard to devDependencies. Add eslint-plugin-promise to devDependencies. Add eslint-plugin-standard to devDependencies. Remove coffee-script from devDependencies. Remove coffeelint from devDependencies
+ ⢂ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢁ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡁ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡈ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡐ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡠ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢄ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢂ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢁ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡁ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡈ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡐ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡠ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢄ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢂ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⢁ invig ❯ init ❯ warning localtunnel > request > tough-cookie@2.2.2: ReDoS vulnerability pa ⡁ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡈ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡐ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡠ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢄ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢂ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢁ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡁ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡈ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡐ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡠ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢄ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢂ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢁ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡁ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡈ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡐ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⡠ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢄ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ⢂ invig ❯ init ❯ warning "babel-plugin-es6-promise@1.1.0" has unmet peer dependency "es6-pr ✔ invig ❯ init ❯ Done in 4.47s.
+ ⡁ invig ❯ src/PaginationStream.coffee ❯ toJs ❯ /Users/kvz/code/node-sdk/src/PaginationStrea ⡈ invig ❯ src/PaginationStream.coffee ❯ toJs ❯ /Users/kvz/code/node-sdk/src/PaginationStrea ⡐ invig ❯ src/PaginationStream.coffee ❯ toJs ❯ /Users/kvz/code/node-sdk/src/PaginationStrea ⡠ invig ❯ src/PaginationStream.coffee ❯ toJs ❯ /Users/kvz/code/node-sdk/src/PaginationStrea ⢄ invig ❯ src/PaginationStream.coffee ❯ toJs ❯ /Users/kvz/code/node-sdk/src/PaginationStrea ✔ invig ❯ src/PaginationStream.coffee ❯ toJs ❯ /Users/kvz/code/node-sdk/src/PaginationStream.coffee → /Users/kvz/code/node-sdk/src/PaginationStream.js
+ ⡐ invig ❯ src/PaginationStream.js ❯ toEs6 ❯ /Users/kvz/code/node-sdk/src/PaginationStream.j ⡠ invig ❯ src/PaginationStream.js ❯ toEs6 ❯ 44:  warning  Unable to transform for loop  (fo ⢄ invig ❯ src/PaginationStream.js ❯ toEs6 ❯ 44:  warning  Unable to transform for loop  (fo ✔ invig ❯ src/PaginationStream.js ❯ toEs6 ❯ lebabed
+ ⡁
+Done.
+bash-3.2$ ls -al src/
+total 32
+drwxr-xr-x   4 kvz  staff    136 Jan 20 11:16 .
+drwxrwx---  20 kvz  staff    680 Jan 20 11:16 ..
+-rw-r--r--   1 kvz  staff   1211 Jan 20 11:16 PaginationStream.js
+-rw-r--r--   1 kvz  staff  10518 Jan 20 10:26 TransloaditClient.coffee
+bash-3.2$ # coffee is gone now
+bash-3.2$ vim src/PaginationStream.js # < turned into js
+bash-3.2$ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   package.json
+        deleted:    src/PaginationStream.coffee
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        .babelrc
+        .eslintignore
+        .eslintrc
+        src/PaginationStream.js
+        yarn.lock
+
+no changes added to commit (use "git add" and/or "git commit -a")
+bash-3.2$ # Boilerplate provided for furher linting & building
+bash-3.2$

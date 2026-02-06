@@ -1,0 +1,39 @@
+chb@conventiont|~
+> lxc list
++-------+---------+-------------------+------+------------+-----------+
+| NAME  |  STATE  |       IPV4        | IPV6 |    TYPE    | SNAPSHOTS |
++-------+---------+-------------------+------+------------+-----------+
+| xen1  | STOPPED |                   |      | PERSISTENT | 0         |
++-------+---------+-------------------+------+------------+-----------+
+| zest1 | RUNNING | 10.0.3.1 (lxcbr0) |      | PERSISTENT | 0         |
++-------+---------+-------------------+------+------------+-----------+
+chb@conventiont|~
+> lxc exec zest1 -- bash
+root@zest1:~# exit
+chb@conventiont|~
+> lxc exec zest1 -- ls -al /root/
+total 28300
+drwx------  4 root root       10 Jan 18 17:40 .
+drwxr-xr-x 22 root root       22 Jan 18 10:38 ..
+-rw-------  1 root root     5617 Jan 20 10:39 .bash_history
+-rw-r--r--  1 root root     3106 Oct 22  2015 .bashrc
+-rw-r--r--  1 root root      148 Aug 17  2015 .profile
+-rw-------  1 root root    22131 Jan 18 17:40 .viminfo
+-rw-r--r--  1 root root      235 Jan 18 10:33 .wget-hsts
+drwxr-xr-x  2 root root        2 Jan 18 10:23 docker
+-rw-r--r--  1 root root 28942109 Jan 11 00:29 docker-latest.tgz
+drwxr-xr-x  4 root root        4 Jan 18 10:26 go
+chb@conventiont|~
+> lxc exec zest1 ip addr show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: lxcbr0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link/ether 00:16:3e:00:00:00 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.3.1/24 scope global lxcbr0
+       valid_lft forever preferred_lft forever
+chb@conventiont|~
+>

@@ -40,7 +40,8 @@ out/
 
 __pycache__/
 
-data/
+data/raw
+data/raw/all_data.json
 *.egg-info/
 samples/
 results/

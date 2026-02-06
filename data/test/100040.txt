@@ -1,0 +1,25 @@
+chb@conventiont|~
+> lxc exec zest1 bash
+root@zest1:~# sleep infinity &
+[1] 1152
+root@zest1:~# # so, sleep runs in the background
+root@zest1:~# # so we should be good to exit now
+root@zest1:~# # let's do it
+root@zest1:~# exit
+exit
+
+
+
+# what's happening?
+
+
+exit
+^C^C^C^C
+# well, stdout is kept open...
+
+
+
+# let's kill the daemon
+LXD socket not found; is LXD installed and running?
+chb@conventiont|~
+>

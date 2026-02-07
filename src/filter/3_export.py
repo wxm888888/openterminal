@@ -11,7 +11,7 @@
 }
 
 用法:
-    python filtering/copy_filtered.py
+    python src/filter/3_export.py
     
     可选参数:
     --input, -i: LLM 结果文件路径 (默认: data/filtered/llm_results_gemini_full.json)
@@ -197,19 +197,19 @@ def main():
     args = parser.parse_args()
     
     # 转换为绝对路径
-    script_dir = Path(__file__).parent.parent
+    project_root = Path(__file__).parent.parent.parent
     
     input_path = args.input
     if not os.path.isabs(input_path):
-        input_path = os.path.join(script_dir, input_path)
+        input_path = os.path.join(project_root, input_path)
     
     source_dir = args.source
     if not os.path.isabs(source_dir):
-        source_dir = os.path.join(script_dir, source_dir)
+        source_dir = os.path.join(project_root, source_dir)
     
     output_dir = args.output
     if not os.path.isabs(output_dir):
-        output_dir = os.path.join(script_dir, output_dir)
+        output_dir = os.path.join(project_root, output_dir)
     
     # 验证输入路径
     if not os.path.exists(input_path):

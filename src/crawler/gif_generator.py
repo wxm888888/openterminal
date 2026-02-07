@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from pathlib import Path
 from tqdm import tqdm
@@ -6,6 +7,10 @@ import argparse
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+
+# 添加项目根目录到 path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 # 用于线程安全的计数器
 stats_lock = Lock()
@@ -104,21 +109,38 @@ def main():
     parser = argparse.ArgumentParser(description='批量将 .cast 文件转换为 .gif 文件')
     parser.add_argument('--workers', type=int, default=4, 
                        help='并行工作线程数 (默认: 4)')
-    parser.add_argument('--cast-dir', type=str, default='./cast',
-                       help='cast 文件目录 (默认: ./cast)')
-    parser.add_argument('--gif-dir', type=str, default='./gif',
-                       help='gif 文件输出目录 (默认: ./gif)')
-    parser.add_argument('--progress-file', type=str, default='./conversion_progress.json',
-                       help='进度文件路径 (默认: ./conversion_progress.json)')
+    parser.add_argument('--cast-dir', type=str, default=None,
+                       help='cast 文件目录 (默认: data/raw/cast)')
+    parser.add_argument('--gif-dir', type=str, default=None,
+                       help='gif 文件输出目录 (默认: data/raw/gif)')
+    parser.add_argument('--progress-file', type=str, default=None,
+                       help='进度文件路径 (默认: data/raw/conversion_progress.json)')
     parser.add_argument('--reset', action='store_true',
                        help='重置进度，重新转换所有文件')
     
     args = parser.parse_args()
     
-    # 设置路径
-    cast_dir = Path(args.cast_dir)
-    gif_dir = Path(args.gif_dir)
-    progress_file = Path(args.progress_file)
+    # 设置默认路径（相对于项目根目录）
+    if args.cast_dir:
+        cast_dir = Path(args.cast_dir)
+        if not cast_dir.is_absolute():
+            cast_dir = project_root / cast_dir
+    else:
+        cast_dir = project_root / 'data' / 'raw' / 'cast'
+    
+    if args.gif_dir:
+        gif_dir = Path(args.gif_dir)
+        if not gif_dir.is_absolute():
+            gif_dir = project_root / gif_dir
+    else:
+        gif_dir = project_root / 'data' / 'raw' / 'gif'
+    
+    if args.progress_file:
+        progress_file = Path(args.progress_file)
+        if not progress_file.is_absolute():
+            progress_file = project_root / progress_file
+    else:
+        progress_file = project_root / 'data' / 'raw' / 'conversion_progress.json'
     
     # 确保 gif 目录存在
     gif_dir.mkdir(exist_ok=True)

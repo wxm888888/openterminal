@@ -16,7 +16,7 @@ import brotli
 import socks
 import sockshandler
 
-from utils.file_utils import addrootdir
+from .file_utils import addrootdir
 
 # 初始化根目录路径
 addrootdir()

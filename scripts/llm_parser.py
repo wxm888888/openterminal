@@ -261,7 +261,8 @@ Terminal Output:
 
 Please return generic regex patterns for all prompt types."""}
                 ],
-                model=self.model_name
+                model=self.model_name,
+                max_tokens=64 * 1024
             )
 
             end_time = time.time()
@@ -376,7 +377,8 @@ Line {c['line_num']}:
                     {"role": "user", "content": f"Determine which of the following candidate lines mark the beginning of real prompts::{''.join(candidates_text)}\n\nPlease analyze line by line and provide a list of confirmed real prompt line numbers."}
                 ],
                 model=self.model_name,
-                temperature=0.3
+                temperature=0.3,
+                max_tokens=64 * 1024
             )
 
             end_time = time.time()
@@ -582,7 +584,8 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
                     {"role": "user", "content": user_message}
                 ],
                 model=self.model_name,
-                temperature=0.2
+                temperature=0.2,
+                max_tokens=64 * 1024
             )
 
             end_time = time.time()
@@ -748,7 +751,8 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
                     {"role": "user", "content": user_message}
                 ],
                 model=self.step4_model_name,
-                temperature=0.2
+                temperature=0.2,
+                max_tokens=64 * 1024
             )
 
             end_time = time.time()

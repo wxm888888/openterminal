@@ -5,7 +5,7 @@ import json
 import asyncio
 import tiktoken
 from tqdm import tqdm
-from multi_model_parse_async import multi_model_parse_and_save_async
+from multi_llm_parser import multi_model_parse_and_save_async
 
 def count_file_tokens(file_path, encoding='cl100k_base'):
     """Count tokens in a file using tiktoken"""
@@ -14,15 +14,15 @@ def count_file_tokens(file_path, encoding='cl100k_base'):
         content = f.read()
     return len(enc.encode(content))
 
-async def process_single_file_async(input_file, output_dir, models, judge_model, file_index, total_files, max_tokens=None):
+async def process_single_file_async(input_file, output_dir, models, judge_model, file_index, total_files, max_input_tokens=None):
     """Async version: Process a single file with multiple models"""
     filename = os.path.splitext(os.path.basename(input_file))[0]
     output_file = os.path.join(output_dir, f'{filename}_multi.json')
 
     # Check token count before processing
-    if max_tokens is not None:
+    if max_input_tokens is not None:
         token_count = count_file_tokens(input_file)
-        if token_count > max_tokens:
+        if token_count > max_input_tokens:
             too_large_dir = 'data/too_large'
             os.makedirs(too_large_dir, exist_ok=True)
             too_large_file = os.path.join(too_large_dir, f'{filename}.json')
@@ -30,7 +30,7 @@ async def process_single_file_async(input_file, output_dir, models, judge_model,
                 json.dump({
                     'input_file': input_file,
                     'token_count': token_count,
-                    'max_tokens': max_tokens
+                    'max_input_tokens': max_input_tokens
                 }, f, ensure_ascii=False, indent=2)
 
             return ('too_large', filename, token_count)
@@ -70,7 +70,7 @@ async def batch_process_txt_files_async(
     models=None,
     judge_model=None,
     max_concurrent=5,
-    max_tokens=100000
+    max_input_tokens=100000
 ):
     """
     Async batch processing: Process all txt files with multiple models and controlled concurrency
@@ -81,7 +81,7 @@ async def batch_process_txt_files_async(
         models: List of model names to use for parsing
         judge_model: Judge model name
         max_concurrent: Maximum concurrent file processing (default 5)
-        max_tokens: Maximum token count per file (default 100000), None to disable
+        max_input_tokens: Maximum input token count per file (default 100000), None to disable
     """
     if models is None:
         models = ['gpt-3.5-turbo', 'gemini-3-flash-preview-nothinking', 'claude-3-5-haiku-20241022']
@@ -110,7 +110,7 @@ async def batch_process_txt_files_async(
         print(f"  Model {chr(ord('A') + i)}: {model}")
     print(f"Judge Model: {judge_model}")
     print(f"Max concurrent: {max_concurrent}")
-    print(f"Max tokens: {max_tokens if max_tokens else 'unlimited'}")
+    print(f"Max input tokens: {max_input_tokens if max_input_tokens else 'unlimited'}")
     print(f"{'='*70}\n")
 
     start_time = time.time()
@@ -153,7 +153,7 @@ async def batch_process_txt_files_async(
                 judge_model,
                 index,
                 len(txt_files),
-                max_tokens
+                max_input_tokens
             )
             update_progress(result[0], result[1])
             return result
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     parser.add_argument('--models', type=str, nargs='+', required=True, help='List of models to use')
     parser.add_argument('--judge-model', type=str, default='claude-3-5-haiku-20241022', help='Judge model')
     parser.add_argument('--max-concurrent', type=int, default=5, help='Max concurrent tasks')
-    parser.add_argument('--max-tokens', type=int, default=100000, help='Max tokens per file')
+    parser.add_argument('--max-input-tokens', type=int, default=100000, help='Max input tokens per file')
 
     args = parser.parse_args()
 
@@ -233,7 +233,7 @@ if __name__ == "__main__":
             models=args.models,
             judge_model=args.judge_model,
             max_concurrent=args.max_concurrent,
-            max_tokens=args.max_tokens
+            max_input_tokens=args.max_input_tokens
         )
 
     asyncio.run(main())

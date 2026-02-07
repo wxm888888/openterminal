@@ -3,7 +3,7 @@ import os
 import asyncio
 from pathlib import Path
 from openai import AsyncOpenAI
-from llm_enhanced_split_async import one_model_parse_async, TerminalParser
+from llm_parser import one_model_parse_async, TerminalParser
 
 client = AsyncOpenAI(
     api_key=os.getenv('OPENAI_API_KEY'),
@@ -184,7 +184,8 @@ async def judge_results_async(txt_file, model_results, judge_model='gpt-5.2-2025
                 {"role": "user", "content": user_message}
             ],
             model=judge_model,
-            temperature=0.3
+            temperature=0.3,
+            max_tokens=64 * 1024
         )
 
         end_time = datetime.now().timestamp()

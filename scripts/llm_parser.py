@@ -605,7 +605,7 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
 
             data = self._extract_json_from_response(result)
 
-            extracted_prompt = data.get('prompt', '')
+            extracted_prompt = data.get('prompt', '').strip()
             if extracted_prompt:
                 turn['prompt'] = extracted_prompt
 
@@ -618,9 +618,12 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
             # try to extract observation from raw_lines using prompt + action as prefix
             raw_text = '\n'.join(turn['raw_lines']) if turn.get('raw_lines') else ''
             prefix = turn['prompt'] + turn['action']['content']
-
+            prefix_with_blank = turn['prompt'] + ' ' + turn['action']['content']
             if raw_text.startswith(prefix):
                 turn['observation']['content'] = raw_text[len(prefix):].strip()
+                turn['prefix_matched'] = True
+            elif raw_text.startswith(prefix_with_blank):
+                turn['observation']['content'] = raw_text[len(prefix_with_blank):].strip()
                 turn['prefix_matched'] = True
             else:
                 obs_lines = data.get('observation_lines', [])
@@ -781,7 +784,7 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
                 for mt in reversed(missed_turns):
                     new_turn = {
                         "turn_id": 0,  # Placeholder, will be renumbered at the end
-                        "prompt": mt.get('prompt', ''),
+                        "prompt": mt.get('prompt', '').strip(),
                         "action": {
                             "content": mt.get('action', {}).get('content', '')
                         },
@@ -845,7 +848,7 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
             for st in split_turns:
                 new_turn = {
                     "turn_id": 0,
-                    "prompt": st.get('prompt', ''),
+                    "prompt": st.get('prompt', '').strip(),
                     "action": {
                         "content": st.get('action', {}).get('content', '')
                     },
@@ -952,11 +955,11 @@ async def one_model_parse_async(input_file, model_name='qwen3-coder-30b-a3b-inst
 if __name__ == "__main__":
     import asyncio
     result = asyncio.run(parse_terminal_file(
-        input_file='data/raw/txt/39675.txt',
-        parsed_output='data/analyzed/39675_parsed_async.json',
-        verified_output='data/analyzed/39675_verified_async.json',
-        model_name='kimi-k2-instruct',
-        step4_model_name='kimi-k2-instruct',
+        input_file='data/raw/txt/2.txt',
+        parsed_output='data/analyzed/2_parsed_async.json',
+        verified_output='data/analyzed/2_verified_async.json',
+        model_name='gpt-4.1-mini-2025-04-14',
+        step4_model_name='gpt-4.1-mini-2025-04-14',
         save_raw_responses=True,
         save_json_results=True
     ))

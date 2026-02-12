@@ -88,6 +88,17 @@ OpenTerminal/
 
 #### 一、单文件处理流程
 
+**0. 预处理**
+
+过滤出不适合进行termianl agent训练的原始txt文本；对于适合训练的txt文本，生成对应任务的任务描述。
+
+代码实现：`scripts/batch_processor.py`
+
+```python
+async def check_file_quality(file_path, model_name):
+    ...
+```
+
 **1. 提示符提取**
 
 提示符是终端输入前的提示文本，比如（单行多行都有可能）：
@@ -223,8 +234,6 @@ pip install -e .
 ```bash
 #!/bin/bash
 
-cd "$(dirname "$0")/.."
-
 # API Configuration
 export OPENAI_API_KEY="<your API_KEY>"
 export OPENAI_BASE_URL="<your BASE_URL>"
@@ -234,6 +243,7 @@ INPUT_DIR="data/test"
 OUTPUT_DIR="data/judge"
 MODELS="kimi-k2-instruct gemini-2.5-flash-nothinking gpt-4.1-mini-2025-04-14"    # 使用模型列表，数量至少为2
 JUDGE_MODEL="gemini-2.5-flash-nothinking"
+FILTER_MODEL="gemini-3-flash-preview"
 MAX_CONCURRENT=5    # 任务并发度
 MAX_INPUT_TOKENS=60000    # 原始txt文件最大token数
 
@@ -269,6 +279,9 @@ OpenTerminal/
 │   ├── analysis/          # LLM 交互信息
 │   │   ├── json_results/        # LLM返回的json
 │   │   └── raw_response/        # LLM的原始返回
+│   ├── preprocess/          # LLM 过滤原始txt文件
+│   │   ├── filtered/        # LLM过滤掉的文件
+│   │   └── qualified/
 │   ├── judge/             # Judge 模型评估结果和所有模型的分割结果
 │   ├── results_LLM/       # Judge 认为正确的分割结果
 │   ├── fail_LLM/          # Judge 认为不适合训练的轨迹

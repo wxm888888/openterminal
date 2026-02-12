@@ -611,7 +611,7 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
 
             action_lines = data.get('action_lines', [])
             if isinstance(action_lines, list):
-                turn['action']['content'] = '\n'.join(action_lines)
+                turn['action']['content'] = '\n'.join(action_lines).strip()
             else:
                 turn['action']['content'] = str(action_lines).strip()
 
@@ -628,7 +628,7 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
             else:
                 obs_lines = data.get('observation_lines', [])
                 if isinstance(obs_lines, list):
-                    turn['observation']['content'] = '\n'.join([line for line in obs_lines if line.strip()])
+                    turn['observation']['content'] = '\n'.join([line for line in obs_lines if line.strip()]).strip()
                 else:
                     turn['observation']['content'] = str(obs_lines).strip()
                 turn['prefix_matched'] = False
@@ -644,7 +644,7 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
 
                 turn['observation']['content'] = '\n'.join([
                     line for line in turn['raw_lines'][1:] if line.strip()
-                ])
+                ]).strip()
             turn['prefix_matched'] = False
     
     async def step4_verify_turns(self, input_file, parsed_result):
@@ -786,10 +786,10 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
                         "turn_id": 0,  # Placeholder, will be renumbered at the end
                         "prompt": mt.get('prompt', '').strip(),
                         "action": {
-                            "content": mt.get('action', {}).get('content', '')
+                            "content": mt.get('action', {}).get('content', '').strip()
                         },
                         "observation": {
-                            "content": mt.get('observation', {}).get('content', '')
+                            "content": mt.get('observation', {}).get('content', '').strip()
                         }
                     }
                     turns.insert(0, new_turn)
@@ -833,10 +833,10 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
             if not v.get('is_correct', True):
                 corrected = v.get('corrected_turn') or {}
                 if corrected and 'action' in corrected and 'content' in corrected['action']:
-                    turns[i]['action']['content'] = corrected['action']['content']
+                    turns[i]['action']['content'] = corrected['action']['content'].strip()
 
                 if corrected and 'observation' in corrected and 'content' in corrected['observation']:
-                    new_output = corrected['observation']['content']
+                    new_output = corrected['observation']['content'].strip()
                     turns[i]['observation']['content'] = new_output
 
                 corrected_count += 1
@@ -850,10 +850,10 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
                     "turn_id": 0,
                     "prompt": st.get('prompt', '').strip(),
                     "action": {
-                        "content": st.get('action', {}).get('content', '')
+                        "content": st.get('action', {}).get('content', '').strip()
                     },
                     "observation": {
-                        "content": st.get('observation', {}).get('content', '')
+                        "content": st.get('observation', {}).get('content', '').strip()
                     }
                 }
                 new_turns.append(new_turn)

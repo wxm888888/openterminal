@@ -97,7 +97,7 @@ def build_judge_system_prompt(model_count):
 A trajectory is **NOT suitable** for Terminal Agent training if:
 
 ### 1. Original content issues (check raw terminal text):
-- **Interactive programs**: vim, ssh, nano, emacs, tmux, screen, etc. that rely on real-time input or state switching
+- **Full-screen editing tools (e.g., vim, vi, nano)**: Only the startup and exit commands are visible, while the internal editing process remains hidden.
 - **Tutorial/practice commands**: brain-* series, dummy examples without real execution
 - **No meaningful commands**: no actual terminal operations
 
@@ -263,7 +263,8 @@ async def multi_model_parse_and_save_async(
     output_file,
     models,
     judge_model='claude-sonnet-4-5-20250929-thinking',
-    save_raw_response=True
+    save_raw_response=True,
+    task_description=''
 ):
     """
     Async version: Parse with multiple models concurrently, then judge
@@ -274,6 +275,7 @@ async def multi_model_parse_and_save_async(
         models: List of model names to use for parsing
         judge_model: Model to use for judging results
         save_raw_response: Whether to save raw model responses
+        task_description: Task description from quality filter (optional)
     """
     if len(models) < 2:
         raise ValueError("At least 2 models are required for comparison")
@@ -313,6 +315,7 @@ async def multi_model_parse_and_save_async(
         'success': success,
         'winner': winner,
         'winner_model': label_to_model.get(winner, winner) if winner in model_labels else winner,
+        'task_description': task_description,
         'result': chosen_result,
         'judgment': {
             'reason': judgment['reason'],
@@ -325,7 +328,7 @@ async def multi_model_parse_and_save_async(
         'input_file': input_file,
         'models': {label: model for label, model in zip(model_labels, models)},
         'judge_model': judge_model,
-        'all_results': {label: clean_results[label] for label in model_labels}
+        'all_results': {label: raw_results[label] for label in model_labels}
     }
 
     basename = os.path.basename(output_file)
@@ -358,6 +361,7 @@ async def multi_model_parse_and_save_async(
 
     elif success:
         clean_output = {
+            'task_description': task_description,
             'initial_output': chosen_result.get('initial_output', ''),
             'turns': chosen_result.get('turns', [])
         }

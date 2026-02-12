@@ -445,7 +445,7 @@ Line {c['line_num']}:
                 
                 pattern_str, match = matched_pattern
                 
-                prompt_str = line[:match.end()]
+                prompt_str = line[:match.end()].strip()
                 
                 current_turn = {
                     "turn_id": turn_id,

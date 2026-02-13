@@ -560,10 +560,11 @@ Result:
 
 IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any additional explanation or text."""
 
-        raw_lines_text = '\n'.join([
-            f"  {i+1}. {line}"
-            for i, line in enumerate(turn['raw_lines'])
-        ])
+        # raw_lines_text = '\n'.join([
+        #     f"  {i+1}. {line}"
+        #     for i, line in enumerate(turn['raw_lines'])
+        # ])
+        raw_lines_text = '\n'.join(turn['raw_lines'])
 
         user_message = f"""Classify the prompt, action (command), and observation (output) from these raw lines:
 

@@ -2,23 +2,97 @@ import re
 import json
 import os
 import time
+import asyncio
+import random
 from datetime import datetime
 from pathlib import Path
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, RateLimitError, APIStatusError
 
 client = AsyncOpenAI(
     api_key=os.getenv('OPENAI_API_KEY'),
     base_url=os.getenv('OPENAI_BASE_URL')
 )
 
+
+_llm_semaphore: asyncio.Semaphore | None = None
+
+
+def init_llm_semaphore(max_concurrency: int):
+    """
+    Initialize the global LLM concurrency semaphore.
+    Call this once at program startup (e.g. in batch_processor) before launching tasks.
+
+    Args:
+        max_concurrency: maximum number of simultaneous LLM API requests
+    """
+    global _llm_semaphore
+    _llm_semaphore = asyncio.Semaphore(max_concurrency)
+
+
+async def llm_call_with_retry(max_retries: int = 10, base_delay: float = 5.0, **kwargs):
+    """
+    Wrapper for client.chat.completions.create with concurrency control and retry.
+
+    Concurrency control:
+    - Respects the global _llm_semaphore (set via init_llm_semaphore).
+      At most max_concurrency requests are in-flight simultaneously.
+      This prevents rate-limit storms when launching many coroutines at once
+      (e.g. asyncio.gather over 50 turns).
+
+    Retry strategy:
+    - RateLimitError (429): exponential backoff with jitter, respects Retry-After header
+    - APIStatusError 5xx:   fixed short delay then retry
+    - Other exceptions:     re-raised immediately
+
+    Args:
+        max_retries:  maximum number of attempts (default 10)
+        base_delay:   base wait seconds for exponential backoff (default 5.0)
+        **kwargs:     arguments forwarded to client.chat.completions.create
+    """
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            if _llm_semaphore is not None:
+                async with _llm_semaphore:
+                    return await client.chat.completions.create(**kwargs)
+            else:
+                return await client.chat.completions.create(**kwargs)
+        except RateLimitError as e:
+            last_error = e
+            retry_after = None
+            if hasattr(e, 'response') and e.response is not None:
+                retry_after = e.response.headers.get('Retry-After')
+            if retry_after is not None:
+                try:
+                    wait = float(retry_after)
+                except (ValueError, TypeError):
+                    wait = min(base_delay * (2 ** attempt), 120) + random.uniform(0, 1)
+            else:
+                wait = min(base_delay * (2 ** attempt), 120) + random.uniform(0, 1)
+            if attempt < max_retries - 1:
+                print(f"[llm_call_with_retry] Rate limited (attempt {attempt + 1}/{max_retries}), "
+                      f"waiting {wait:.1f}s ...")
+                await asyncio.sleep(wait)
+        except APIStatusError as e:
+            last_error = e
+            if e.status_code >= 500 and attempt < max_retries - 1:
+                wait = min(base_delay * (2 ** attempt), 60) + random.uniform(0, 1)
+                print(f"[llm_call_with_retry] API server error {e.status_code} "
+                      f"(attempt {attempt + 1}/{max_retries}), waiting {wait:.1f}s ...")
+                await asyncio.sleep(wait)
+            else:
+                raise
+    raise last_error
+
 class TerminalParser:
-    def __init__(self, model_name='qwen3-8b', step4_model_name='claude-sonnet-4-20250514', save_raw_responses=True, save_json_results=True, file_id=None):
+    def __init__(self, model_name='qwen3-8b', step4_model_name='claude-sonnet-4-20250514', save_raw_responses=True, save_json_results=True, file_id=None, max_retries=10):
         self.prompt_patterns = []
         self.model_name = model_name
         self.step4_model_name = step4_model_name
         self.save_raw_responses = save_raw_responses
         self.save_json_results = save_json_results
         self.file_id = file_id
+        self.max_retries = max_retries
 
     def _extract_json_from_response(self, response_text):
         if not response_text or not isinstance(response_text, str):
@@ -246,7 +320,8 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
             request_time = datetime.now().isoformat()
             start_time = time.time()
 
-            response = await client.chat.completions.create(
+            response = await llm_call_with_retry(
+                max_retries=self.max_retries,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"""Analyze the following terminal output and identify ALL distinct prompt patterns.
@@ -371,7 +446,8 @@ Line {c['line_num']}:
             request_time = datetime.now().isoformat()
             start_time = time.time()
 
-            response = await client.chat.completions.create(
+            response = await llm_call_with_retry(
+                max_retries=self.max_retries,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Determine which of the following candidate lines mark the beginning of real prompts::{''.join(candidates_text)}\n\nPlease analyze line by line and provide a list of confirmed real prompt line numbers."}
@@ -579,7 +655,8 @@ Please extract the complete prompt (including all prompt lines if multi-line), t
             request_time = datetime.now().isoformat()
             start_time = time.time()
 
-            response = await client.chat.completions.create(
+            response = await llm_call_with_retry(
+                max_retries=self.max_retries,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
@@ -749,7 +826,8 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
             request_time = datetime.now().isoformat()
             start_time = time.time()
 
-            response = await client.chat.completions.create(
+            response = await llm_call_with_retry(
+                max_retries=self.max_retries,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
@@ -870,13 +948,13 @@ IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any addit
 
         return verification_results
 
-async def parse_terminal_file(input_file, parsed_output=None, verified_output=None, model_name='gpt-5.2-2025-12-11', step4_model_name='claude-sonnet-4-20250514', save_raw_responses=True, save_json_results=True):
+async def parse_terminal_file(input_file, parsed_output=None, verified_output=None, model_name='gpt-5.2-2025-12-11', step4_model_name='claude-sonnet-4-20250514', save_raw_responses=True, save_json_results=True, max_retries=10):
 
     file_id = None
     if save_raw_responses or save_json_results:
         file_id = Path(input_file).stem
 
-    parser = TerminalParser(model_name=model_name, step4_model_name=step4_model_name, save_raw_responses=save_raw_responses, save_json_results=save_json_results, file_id=file_id)
+    parser = TerminalParser(model_name=model_name, step4_model_name=step4_model_name, save_raw_responses=save_raw_responses, save_json_results=save_json_results, file_id=file_id, max_retries=max_retries)
     
     success = await parser.step1_learn_prompts(input_file)
     if not success or len(parser.prompt_patterns) == 0:
@@ -941,7 +1019,7 @@ async def parse_terminal_file(input_file, parsed_output=None, verified_output=No
 
     return final_result
 
-async def one_model_parse_async(input_file, model_name='qwen3-coder-30b-a3b-instruct', step4_model_name='gpt-5.2-2025-12-11', save_raw_responses=True, save_json_results=True):
+async def one_model_parse_async(input_file, model_name='qwen3-coder-30b-a3b-instruct', step4_model_name='gpt-5.2-2025-12-11', save_raw_responses=True, save_json_results=True, max_retries=10):
     result = await parse_terminal_file(
         input_file=input_file,
         parsed_output=None,
@@ -949,18 +1027,20 @@ async def one_model_parse_async(input_file, model_name='qwen3-coder-30b-a3b-inst
         model_name=model_name,
         step4_model_name=step4_model_name,
         save_raw_responses=save_raw_responses,
-        save_json_results=save_json_results
+        save_json_results=save_json_results,
+        max_retries=max_retries
     )
     return result
 
 if __name__ == "__main__":
     import asyncio
+    init_llm_semaphore(20)
     result = asyncio.run(parse_terminal_file(
-        input_file='data/raw/txt/2.txt',
-        parsed_output='data/analyzed/2_parsed_async.json',
-        verified_output='data/analyzed/2_verified_async.json',
-        model_name='gpt-4.1-mini-2025-04-14',
-        step4_model_name='gpt-4.1-mini-2025-04-14',
+        input_file='data/raw/txt/7.txt',
+        parsed_output='data/analyzed/7_parsed_async.json',
+        verified_output='data/analyzed/7_verified_async.json',
+        model_name='gemini-2.5-flash-nothinking',
+        step4_model_name='qwen3-8b',
         save_raw_responses=True,
         save_json_results=True
     ))

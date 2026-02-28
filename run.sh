@@ -7,11 +7,15 @@ export OPENAI_BASE_URL=""
 # Configuration
 INPUT_DIR="data/test"
 OUTPUT_DIR="data/judge"
-MODELS="kimi-k2-instruct gemini-3-flash-preview claude-3-5-haiku-20241022"
-JUDGE_MODEL="gemini-3-flash-preview"
-FILTER_MODEL="gemini-3-flash-preview"
+
+MODELS="kimi-k2-instruct gemini-2.5-flash-nothinking qwen3-8b"
+JUDGE_MODEL="gemini-2.5-flash-nothinking"
+FILTER_MODEL="gemini-2.5-flash-nothinking"
+
 MAX_CONCURRENT=5
 MAX_INPUT_TOKENS=60000
+MAX_RETRIES=10
+MAX_LLM_CONCURRENCY=20
 
 python scripts/batch_processor.py \
     --input-dir "$INPUT_DIR" \
@@ -20,4 +24,6 @@ python scripts/batch_processor.py \
     --judge-model "$JUDGE_MODEL" \
     --filter-model "$FILTER_MODEL" \
     --max-concurrent $MAX_CONCURRENT \
-    --max-input-tokens $MAX_INPUT_TOKENS
+    --max-input-tokens $MAX_INPUT_TOKENS \
+    --max-retries $MAX_RETRIES \
+    --max-llm-concurrency $MAX_LLM_CONCURRENCY

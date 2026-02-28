@@ -6,7 +6,7 @@ import asyncio
 import tiktoken
 from tqdm import tqdm
 from openai import AsyncOpenAI
-from llm_parser import TerminalParser
+from llm_parser import TerminalParser, llm_call_with_retry, init_llm_semaphore
 from multi_llm_parser import multi_model_parse_and_save_async
 
 client = AsyncOpenAI(
@@ -18,7 +18,7 @@ client = AsyncOpenAI(
 _json_extractor = TerminalParser()
 
 
-async def check_file_quality(file_path, model_name='qwen3-8b'):
+async def check_file_quality(file_path, model_name='qwen3-8b', max_retries=10):
     """Use LLM to check if a txt file contains qualified terminal interaction records."""
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
@@ -61,7 +61,8 @@ Return ONLY a JSON object (wrapped in ```json code block) with the following for
 IMPORTANT: Return ONLY the JSON wrapped in ```json code block, without any additional explanation or text."""
 
     try:
-        response = await client.chat.completions.create(
+        response = await llm_call_with_retry(
+            max_retries=max_retries,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": content}
@@ -87,7 +88,7 @@ def count_file_tokens(file_path, encoding='cl100k_base'):
         content = f.read()
     return len(enc.encode(content))
 
-async def process_single_file_async(input_file, output_dir, models, judge_model, file_index, total_files, max_input_tokens=None, filter_model=None):
+async def process_single_file_async(input_file, output_dir, models, judge_model, file_index, total_files, max_input_tokens=None, filter_model=None, max_retries=10):
     """Async version: Process a single file with multiple models"""
     filename = os.path.splitext(os.path.basename(input_file))[0]
     output_file = os.path.join(output_dir, f'{filename}_multi.json')
@@ -110,7 +111,7 @@ async def process_single_file_async(input_file, output_dir, models, judge_model,
 
     # LLM quality filter
     if filter_model is not None:
-        qualified, reason, task_description = await check_file_quality(input_file, model_name=filter_model)
+        qualified, reason, task_description = await check_file_quality(input_file, model_name=filter_model, max_retries=max_retries)
         if not qualified:
             filtered_dir = 'data/preprocess/filtered'
             os.makedirs(filtered_dir, exist_ok=True)
@@ -143,7 +144,8 @@ async def process_single_file_async(input_file, output_dir, models, judge_model,
             output_file=output_file,
             models=models,
             judge_model=judge_model,
-            task_description=task_description if filter_model is not None else ''
+            task_description=task_description if filter_model is not None else '',
+            max_retries=max_retries
         )
 
         if result.get('success', False):
@@ -174,7 +176,8 @@ async def batch_process_txt_files_async(
     judge_model=None,
     max_concurrent=5,
     max_input_tokens=100000,
-    filter_model=None
+    filter_model=None,
+    max_retries=10
 ):
     """
     Async batch processing: Process all txt files with multiple models and controlled concurrency
@@ -267,7 +270,8 @@ async def batch_process_txt_files_async(
                 index,
                 len(txt_files),
                 max_input_tokens,
-                filter_model
+                filter_model,
+                max_retries
             )
             update_progress(result[0], result[1])
             return result
@@ -348,10 +352,14 @@ if __name__ == "__main__":
     parser.add_argument('--max-concurrent', type=int, default=5, help='Max concurrent tasks')
     parser.add_argument('--max-input-tokens', type=int, default=100000, help='Max input tokens per file')
     parser.add_argument('--filter-model', type=str, default=None, help='Model name for LLM quality filter (disabled if not set)')
+    parser.add_argument('--max-retries', type=int, default=10, help='Max LLM retry attempts on rate limit or server error (default: 10)')
+    parser.add_argument('--max-llm-concurrency', type=int, default=20, help='Max concurrent LLM API requests globally (default: 20)')
 
     args = parser.parse_args()
 
     async def main():
+        # Limit concurrent LLM requests globally to avoid rate-limit storms
+        init_llm_semaphore(args.max_llm_concurrency)
         await batch_process_txt_files_async(
             input_dir=args.input_dir,
             output_dir=args.output_dir,
@@ -359,7 +367,8 @@ if __name__ == "__main__":
             judge_model=args.judge_model,
             max_concurrent=args.max_concurrent,
             max_input_tokens=args.max_input_tokens,
-            filter_model=args.filter_model
+            filter_model=args.filter_model,
+            max_retries=args.max_retries
         )
 
     asyncio.run(main())

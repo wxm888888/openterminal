@@ -3,7 +3,7 @@ import os
 import asyncio
 from pathlib import Path
 from openai import AsyncOpenAI
-from llm_parser import one_model_parse_async, TerminalParser
+from llm_parser import one_model_parse_async, TerminalParser, llm_call_with_retry
 
 client = AsyncOpenAI(
     api_key=os.getenv('OPENAI_API_KEY'),
@@ -160,7 +160,7 @@ Finally, provide your complete judgment in JSON format."""
     return user_message
 
 
-async def judge_results_async(txt_file, model_results, judge_model='gpt-5.2-2025-12-11', save_raw_response=True, file_id=None):
+async def judge_results_async(txt_file, model_results, judge_model='gpt-5.2-2025-12-11', save_raw_response=True, file_id=None, max_retries=10):
     """Async version of judge_results with trajectory suitability evaluation for N models"""
     from datetime import datetime
 
@@ -178,7 +178,8 @@ async def judge_results_async(txt_file, model_results, judge_model='gpt-5.2-2025
         request_time = datetime.now().isoformat()
         start_time = datetime.now().timestamp()
 
-        response = await client.chat.completions.create(
+        response = await llm_call_with_retry(
+            max_retries=max_retries,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message}
@@ -264,7 +265,8 @@ async def multi_model_parse_and_save_async(
     models,
     judge_model='claude-sonnet-4-5-20250929-thinking',
     save_raw_response=True,
-    task_description=''
+    task_description='',
+    max_retries=10
 ):
     """
     Async version: Parse with multiple models concurrently, then judge
@@ -282,7 +284,7 @@ async def multi_model_parse_and_save_async(
 
     file_id = Path(input_file).stem if save_raw_response else None
 
-    tasks = [one_model_parse_async(input_file=input_file, model_name=model, step4_model_name=model) for model in models]
+    tasks = [one_model_parse_async(input_file=input_file, model_name=model, step4_model_name=model, max_retries=max_retries) for model in models]
     results = await asyncio.gather(*tasks)
 
     model_labels = [f"model_{chr(ord('a') + i)}" for i in range(len(models))]
@@ -297,7 +299,8 @@ async def multi_model_parse_and_save_async(
         model_results=clean_results,
         judge_model=judge_model,
         save_raw_response=save_raw_response,
-        file_id=file_id
+        file_id=file_id,
+        max_retries=max_retries
     )
 
     winner = judgment['winner']

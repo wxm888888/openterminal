@@ -1,0 +1,2 @@
+~/OxF # zig build --release=small
+~/OxF # zig-out/bin/OxF

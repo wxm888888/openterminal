@@ -1,0 +1,8 @@
+
+devsync on  master [⇡] is 📦 v0.1.0 via 🦀 v1.93.1 on ☁️  (us-east-2)
+❯ cargo run --release
+cargo    Finished `release` profile [optimized] target(s) in 0.37s
+     Running `target/release/readdev`
+
+devsync on  master [⇡] is 📦 v0.1.0 via 🦀 v1.93.1 on ☁️  (us-east-2) took 56s
+❯

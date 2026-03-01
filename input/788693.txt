@@ -1,0 +1,84 @@
+[I] norman@cyan ~/some-project (main)
+❯ pi
+
+
+ Read @README.md and ask me questions about it
+
+
+
+ read README.md
+
+ # Some new project
+
+ Great things will happen here!
+
+
+
+ Session: Read README and ask questions
+
+ Thanks for sharing! This README is quite minimal - just a title and tagline. I'd love
+
+
+ Read @README.md and ask me questions about it
+
+
+
+ read README.md
+
+ # Some new project
+
+ Great things will happen here!
+
+
+
+ Session: Read README and ask questions
+
+ Thanks for sharing! This README is quite minimal - just a title and tagline. I'd love
+ to learn more to help you flesh it out properly.
+
+ Here are a few questions:
+
+ 1. What is this project? - Is it a web app, CLI tool, library, game, or something
+ else?
+ 2. What does it do? - What's the core functionality or purpose?
+ 3. Who is it for? - Developers, end users, a specific audience?
+ 4. Any key features you'd like to highlight?
+ 5. Tech stack? - What languages/frameworks/tools are you using?
+ 6. Is there existing code in this repo, or is it just getting started?
+ 7. Do you have a preferred style for documentation (e.g., formal, casual, minimal)?
+
+ Let me know and I can help expand the README or explore what's already in the project!
+
+
+ [🦜 parrot squawking]
+
+ 2. What does it do? NOTHING!
+ 3. Do you have a preferred style funny
+
+
+ Hah! I love it. A project dedicated to doing absolutely nothing is a bold choice. Let
+ me write you a gloriously useless README:
+
+
+ write ...
+
+ # Some new project
+
+ > It does nothing. And it does it beautifully.
+
+ ## Overview
+
+ This is a project that absolutely refuses to solve any problems, automate any tasks,
+ or make anyone's life easier. We spent
+
+
+ ⠦ Working...
+
+────────────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────────────
+~/some-project (main) • Read README and ask questions
+↑6.2k ↓280 $0.001 0.1%/205k (auto)             (aihubmix) cc-minimax-m2.5 • thinking off
+
+[I] norman@cyan ~/some-project (main)
+❯ exit

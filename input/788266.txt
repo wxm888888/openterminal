@@ -1,0 +1,94 @@
+相思了无益，悔当初相见。
+Welcome back, DI! Today is Sunday, 19:24
+[  7:24PM ]  [ h2028176@C02KL3ZWQ6L4:~/xinbot(master✗) ]
+ $ java -jar ./target/xinbot-1.16.0-RELEASE.jar
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/Users/h2028176/xinbot/target/xinbot-1.16.0-RELEASE.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+[19:24:53  INFO] [Xinbot]: Loading config file: config.conf
+[19:24:54  INFO] [LangManager]: Loaded language en_us
+[19:24:54  INFO] [Xinbot]: version: 1.16.0-RELEASE
+[19:24:54  INFO] [PluginManager]: Loaded plugin: xin.bbtt.mcbot.XinbotPlugin
+[19:24:54  INFO] [PluginManager]: No plugins found.
+[19:24:54  INFO] [Bot]: Starting bot with username: xinbot测试
+[19:24:54  INFO] [Bot]: Connecting.
+[19:24:55  INFO] [ChatMessagePrinter][SysChatMessage]: IP地址未更改,已为您自动登录！
+[19:24:55  INFO] [Bot]: Connection completed.
+[19:24:56  INFO] [ServerMembersChangedMessagePrinter]: [+]小明爱打游戏
+[19:24:56  INFO] [ServerMembersChangedMessagePrinter]: [+]小吖吖
+[19:24:56  INFO] [ServerMembersChangedMessagePrinter]: [+]宫园薰
+[19:24:56  INFO] [ServerMembersChangedMessagePrinter]: [+]未变
+[19:24:56  INFO] [ServerMembersChangedMessagePrinter]: [+]q10gg
+[19:24:56  INFO] [ChatMessagePrinter][SysChatMessage]: You are logged in!
+[19:24:56  INFO] [ChatMessagePrinter][SysChatMessage]: You are logged in!
+[19:24:56  INFO] [AutoLoginListener]: Login successful
+[19:24:56  INFO] [ChatMessagePrinter][SysChatMessage]: You are logged in!
+[19:24:59  INFO] [ChatMessagePrinter][SysChatMessage]: jchnb666 自杀
+> help
+[19:25:00  INFO] [HelpCommandExecutor]: Command: say
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ say, chat ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: A command to say a chat.
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: say <message>
+[19:25:00  INFO] [HelpCommandExecutor]: Command: command
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ command, cmd ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: A command to send commands.
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: command command
+[19:25:00  INFO] [HelpCommandExecutor]: Command: stop
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ stop ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: stops the bot
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: stop
+[19:25:00  INFO] [HelpCommandExecutor]: Command: help
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ help ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: Shows the list of available commands
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: help / help <command>
+[19:25:00  INFO] [HelpCommandExecutor]: Command: disconnect
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ disconnect, dc ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: A command to disconnect with server.
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: disconnect
+[19:25:00  INFO] [HelpCommandExecutor]: Command: list
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ list ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: Shows the list of players
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: list / list uuid
+[19:25:00  INFO] [HelpCommandExecutor]: Command: PluginManager
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ PluginManager, pm ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: A command to manage plugins.
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: PluginManager list / PluginManager load <plugin file name1> <plugin file name2> ... / PluginManager unload <plugin name1> <plugin name2> ... / PluginManager reload <plugin name1> <plugin name2> ... / PluginManager enable <plugin name1> <plugin name2> ... / PluginManager disable <plugin name1> <plugin name2> ... / PluginManager re-enable <plugin name1> <plugin name2> ...
+[19:25:00  INFO] [HelpCommandExecutor]: Command: plugins
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ plugins ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: A command to show all plugins
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: plugins
+[19:25:00  INFO] [HelpCommandExecutor]: Command: license
+[19:25:00  INFO] [HelpCommandExecutor]:         Plugin: XinbotPlugin
+[19:25:00  INFO] [HelpCommandExecutor]:         Aliases: [ license, lic ]
+[19:25:00  INFO] [HelpCommandExecutor]:         Description: Show the license of Xinbot
+[19:25:00  INFO] [HelpCommandExecutor]:         Usage: license
+[19:25:03  INFO] [ChatMessagePrinter][SysChatMessage]: <_Dayeah_> 拿去刷
+[19:25:04  INFO] [ServerMembersChangedMessagePrinter]: [+]q10gg
+> plugins
+[19:25:05  INFO] [PluginsCommandExecutor]: There are 1 plugins loaded: XinbotPlugin(1.16.0-RELEASE)
+[19:25:06  INFO] [ChatMessagePrinter][SysChatMessage]: <huangdihd末地监控> [bot]使用!ender以查询末地主岛人数!(895)
+[19:25:10  INFO] [ChatMessagePrinter][SysChatMessage]: _GeorgeBob_886_ 自杀
+[19:25:11  INFO] [ChatMessagePrinter][SysChatMessage]: <小马想过河> _GeorgeBob_886_ 购买我的Mind参数获取强大的水晶 n
+[19:25:11  INFO] [ServerMembersChangedMessagePrinter]: [+]阿达达瓦伟大
+[19:25:12  INFO] [ChatMessagePrinter][SysChatMessage]: xinbot测试 被 那个万恶的 用 Netherite Sword 击杀
+[19:25:12  INFO] [ServerMembersChangedMessagePrinter]: [-]q10gg
+[19:25:15  INFO] [ServerMembersChangedMessagePrinter]: [+]Stars8989
+> PluginManager
+[19:25:18 ERROR] [PluginManagerCommandExecutor]: PluginManager list / PluginManager load <plugin file name1> <plugin file name2> ... / PluginManager unload <plugin name1> <plugin name2> ... / PluginManager reload <plugin name1> <plugin name2> ... / PluginManager enable <plugin name1> <plugin name2> ... / PluginManager disable <plugin name1> <plugin name2> ... / PluginManager re-enable <plugin name1> <plugin name2> ...
+> stop
+[19:25:21  INFO] [DisconnectReasonPrinter]: Bot stopped.
+[19:25:21  INFO] [PluginManager]: Unloaded plugin: xin.bbtt.mcbot.XinbotPlugin
+[19:25:21  INFO] [Xinbot]: Bot stopped.
+[19:25:21  INFO] [Xinbot]: Bye!
+[  7:25PM ]  [ h2028176@C02KL3ZWQ6L4:~/xinbot(master✗) ]
+ $ exit

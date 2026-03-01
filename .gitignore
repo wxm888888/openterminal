@@ -45,3 +45,4 @@ data/*
 samples/
 results/
 evaluation/result/
+output/

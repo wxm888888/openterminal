@@ -1,0 +1,13 @@
+$ # Rendering images in iTerm2 terminal
+$ imgcat banana.png
+
+$ imgcat penguin.gif
+
+$
+$
+$ imgcat kiribati.svg
+
+$ uv run ./stocks.py | imgcat
+
+$
+$

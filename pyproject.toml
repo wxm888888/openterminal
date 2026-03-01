@@ -1,9 +1,23 @@
 [project]
 name = "openterminal"
 version = "0.1.0"
-description = "大规模终端交互数据集"
-requires-python = ">=3.8"
+description = "Large-scale terminal interaction dataset toolkit"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.0.0",
+    "tiktoken>=0.5.0",
+]
+
+[project.optional-dependencies]
+crawler = [
+    "selenium>=4.0.0",
+    "tqdm>=4.65.0",
+    "brotli>=1.0.9",
+    "PySocks>=1.7.1",
+]
+
+[project.scripts]
+openterminal = "openterminal.cli:cli"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+where = ["src"]

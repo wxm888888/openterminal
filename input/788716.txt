@@ -1,0 +1,17 @@
+[chris@oBlock ~]$ lcsajdump --help
+Usage: lcsajdump [OPTIONS] BINARY_PATH
+
+  LCSAJ ROP Finder. Analyze a binary to find ROP gadgets using Rainbow BFS
+  algorithm.
+
+Options:
+  -d, --depth INTEGER      Max search depth (LCSAJ blocks).
+  -k, --darkness INTEGER   Pruning threshold (Max visits per node).
+  -l, --limit INTEGER      Desired number of gadgets to show.
+  -s, --min-score INTEGER  Min score for a gadget to be shown.
+  -v, --verbose            Verbose results for a better detailed result.
+  -a, --arch TEXT          Architecture of the binary (default: riscv64).
+  --version                Show the version and exit.
+  --help                   Show this message and exit.
+[chris@oBlock ~]$
+exit

@@ -1,0 +1,19 @@
+Scanning: eth0
+Network: 192.168.1.100/24
+Neighbor discovery 2/2
+Subnet sweep 254/254
+█████████████████████████████████████████████ 100%
+4 active:
+• 192.168.1.1 - Ubiquiti Inc
+    port 22: SSH-2.0-OpenSSH_8.4
+    port 80: UniFi OS 3.2.12
+    port 443
+• 192.168.1.50 - NVIDIA Corporation
+    port 22: SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6
+    port 5432
+• 192.168.1.75 - Liteon Technology Corporation
+    port 22: SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.11
+• 192.168.1.100 - Apple, Inc.
+    port 80: Apache/2.4.56
+    port 443
+    port 8080: Jetty 11.0.15

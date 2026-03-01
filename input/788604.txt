@@ -1,0 +1,189 @@
+╭─ 🐱 rust at 🐱 localhost in 🐱 ~/.../E-OFFICE/e-office-cloud-dashboard in  (🐱 main ↓ •)
+╰─λ geeto
+Geeto v1.1.0 — AI-Powered Git Workflow Automation
+
+
+┌─ Git Information ───────────────────────────────────────┐
+│ Username: Agung Maulana
+│ Email: amdev142@gmail.com
+│ Remote: git@gitlab.com:pkumayong/e-office2023/cloud-dashboard.git
+│ Remote branch: origin/main
+│ Trello board: TZoFNztq
+└─────────────────────────────────────────────────────────┘
+? Welcome to Geeto! What would you like to do?
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+❯ Start new workflow
+  Trello tasks
+  Security & Quality Gate
+  Settings
+  Exit
+
+⚠ Found saved checkpoint from: 2/2/2026, 1:19:43 PM
+ℹ Last step: Cleanup
+ℹ Working branch: main
+ℹ Checkpoint already complete — starting fresh...
+ℹ Starting fresh...
+
+┌─ Git Information ───────────────────────────────────────┐
+│ Username: Agung Maulana
+│ Email: amdev142@gmail.com
+│ Remote: git@gitlab.com:pkumayong/e-office2023/cloud-dashboard.git
+│ Remote branch: origin/main
+│ Trello board: TZoFNztq
+└─────────────────────────────────────────────────────────┘
+✓ Trello platform configured
+ℹ Current branch: main
+ℹ Changed files: 4
+
+Changed files:
+  env.example
+  src/lib/server/jwt.ts
+  src/routes/auth/logout/+page.server.ts
+  src/routes/dashboard/+page.server.ts
+
+▶ Step 1: Stage Changes
+? What to stage?
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+❯ Stage all changes
+  Already staged
+  Continue without staging
+  Cancel
+
+✓ All changes staged
+
+Staged files:
+  + .env.example
+  + src/lib/server/jwt.ts
+  + src/routes/auth/logout/+page.server.ts
+  + src/routes/dashboard/+page.server.ts
+
+▶ Step 2: Create Branch
+
+Create new branch? (Y/n):
+? Branch naming:
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+  Link to Trello Card
+❯ Generate with AI
+  Enter custom name
+  Cancel
+
+
+[AI] Suggested: release#cookie_options_node_env
+ℹ Incorrect Suggestion? check .geeto/last-ai-suggestion.json (possible AI/context limit).
+
+? Accept this branch name?
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+❯ Yes, use it
+  Regenerate
+  Correct AI (give feedback)
+  Change model
+  Change AI provider
+  Edit manually
+  Back to branch menu
+
+ℹ Creating branch: release#cookie_options_node_env
+Switched to a new branch 'release#cookie_options_node_env'
+✓ Branch created: release#cookie_options_node_env
+
+▶ Step 3: Commit
+
+Use GitHub Copilot (gpt-5-mini) for commit? (recommended) (Y/n):
+ℹ Git diff size: 5628 chars
+
+
+[AI] Suggested Commit:
+
+refactor(auth): centralize cookie options into helper
+
+Add getCookieOptions(...) in src/lib/server/jwt.ts and replace inline
+cookie option objects in dashboard and logout handlers with the helper.
+Update .env.example with NODE_ENV and cookie security comments.
+
+This removes duplicated secure/path/sameSite logic, ensures consistent
+cookie settings between development and production, and supports optional
+expiration via the expiresIn parameter.
+
+ℹ Incorrect Suggestion? check .geeto/last-ai-suggestion.json (possible AI/context limit).
+? Accept this commit message?
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+❯ Yes, use it
+  Regenerate
+  Edit in editor (vi)
+  Correct AI (give feedback)
+  Change model
+  Change AI provider
+
+ℹ User accepted AI suggestion
+[release#cookie_options_node_env 746e6f7] refactor(auth): centralize cookie options into helper
+ 4 files changed, 39 insertions(+), 33 deletions(-)
+
+Push release#cookie_options_node_env to origin now? (Y/n):
+
+▶ Step 4: Push to Remote
+
+Pushing to remote: [████████████████████████████████████████] 100/100 (100%)
+
+✓ Pushed release#cookie_options_node_env to remote
+
+▶ Step 5: Merge to Target Branch
+
+? Choose target branch for merge:
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+  Create 'development' branch
+❯ dev
+  main
+  Cancel
+
+Merge release#cookie_options_node_env into dev? (Y/n):
+? How to merge?
+  (↑↓/jk arrows, / search, Enter select, 'c' clear, 'q' quit)
+
+❯ Merge --no-ff (preserve history)
+  Squash and merge --no-ff
+
+Switched to branch 'dev'
+Your branch is up to date with 'origin/dev'.
+Merge made by the 'ort' strategy.
+ .env.example                           |  4 ++++
+ CHANGELOG.md                           | 13 +++++++++++++
+ package.json                           |  2 +-
+ src/lib/server/jwt.ts                  | 42 +++++++++++++++++++++++++++++-------------
+ src/routes/auth/logout/+page.server.ts |  4 ++--
+ src/routes/dashboard/+page.server.ts   | 22 ++++------------------
+ 6 files changed, 53 insertions(+), 34 deletions(-)
+✓ Merged release#cookie_options_node_env into dev with --no-ff
+
+Push dev to origin? (Y/n):
+
+ℹ Pushing dev to: git@gitlab.com:pkumayong/e-office2023/cloud-dashboard.git
+
+Pushing dev to remote: [████████████████████████████████████████] 100/100 (100%)
+
+✓ Pushed dev to remote
+
+▶ Step 6: Cleanup
+
+Delete branch 'release#cookie_options_node_env'? (Y/n):
+Deleted branch release#cookie_options_node_env (was 746e6f7).
+✓ Local branch 'release#cookie_options_node_env' deleted
+✓ Remote branch 'release#cookie_options_node_env' deleted
+
+✓ Workflow Complete!
+
+┌─ Summary ───────────────────────────────────────────────┐
+│ Files staged: 0
+│ Branch: release#cookie_options_node_env
+│ Merged to: dev
+└─────────────────────────────────────────────────────────┘
+
+Next: Continue working on dev
+
+╭─ 🐱 rust at 🐱 localhost in 🐱 ~/.../E-OFFICE/e-office-cloud-dashboard in  (🐱 dev ↓ )
+╰─λ
+exit

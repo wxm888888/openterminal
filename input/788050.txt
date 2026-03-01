@@ -1,0 +1,83 @@
+@Fosurero ➜ /workspaces/PRSpec (main) $ export PATH="/home/codespace/.python/current/bin:$PATH"
+cd /workspaces/PRSpec
+python -m src.cli analyze --eip 1559 --client go-ethereum --output html
+
+  ██████╗ ██████╗ ███████╗██████╗ ███████╗ ██████╗
+  ██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝██╔════╝
+  ██████╔╝██████╔╝███████╗██████╔╝█████╗  ██║
+  ██╔═══╝ ██╔══██╗╚════██║██╔═══╝ ██╔══╝  ██║
+  ██║     ██║  ██║███████║██║     ███████╗╚██████╗
+  ╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝     ╚══════╝ ╚═════╝
+
+╭──────────────────────────────────────────────────────────────────────────────────── Configuration ────────────────────────────────────────────────────────────────────────────────────╮
+│   EIP         1559                                                                                                                                                                    │
+│   Client      go-ethereum                                                                                                                                                             │
+│   Provider    gemini                                                                                                                                                                  │
+│   Output      html                                                                                                                                                                    │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+  Analyzing 5 files (~2-5 min (parallel)) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5/5
+╭────────────────────────────────────────────────────────────────────────────────── Executive Summary ──────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                                                                       │
+│  PRSpec analysed 5 files from go-ethereum's EIP-1559 implementation using Gemini (gemini-2.5-pro). Overall verdict: ISSUES FOUND at 52% average confidence. 4 issues detected (4      │
+│  high).                                                                                                                                                                               │
+│                                                                                                                                                                                       │
+│  consensus/misc/eip1559.go — MISSING (0 issues): The implementation code from the specified URL could not be retrieved due to a 404 Not Found error. As a result, the req             │
+│  core/types/transaction.go — PARTIAL_MATCH (1 issues): The provided implementation in `core/types/transaction.go` correctly defines the EIP-1559 transaction type and its assoc       │
+│  core/types/tx_dynamic_fee.go — ERROR (0 issues): Gemini analysis failed: 'NoneType' object has no attribute 'strip'                                                                  │
+│  params/protocol_params.go — MISSING (1 issues): The provided code file `params/protocol_params.go` correctly implements the constant values specified in EIP-1559, such              │
+│  core/state_transition.go — PARTIAL_MATCH (2 issues): The provided code from `core/state_transition.go` correctly implements the transaction-level aspects of EIP-1559, includ        │
+│                                                                                                                                                                                       │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+   EIP-1559 Compliance Report -
+           go-ethereum
+╭─────────────────┬──────────────╮
+│ Metric          │ Value        │
+├─────────────────┼──────────────┤
+│ Overall Status  │ ISSUES FOUND │
+│ Confidence      │ 52%          │
+│ Files Analyzed  │ 5            │
+│ Total Issues    │ 4            │
+│ High Severity   │ 4            │
+│ Medium Severity │ 0            │
+│ Low Severity    │ 0            │
+╰─────────────────┴──────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────── Status: PARTIAL_MATCH ────────────────────────────────────────────────────────────────────────────────╮
+│ core/types/transaction.go                                                                                                                                                             │
+│ The provided implementation in `core/types/transaction.go` correctly defines the EIP-1559 transaction type and its associated fee calculation helpers, such as the effective gas tip. │
+│ However, the code snippet is limited in scope and does not include the consensus-critical logic for base fee updates, gas limit validation, or the full set of transaction validity   │
+│ checks, which are expected in other parts of the client and are essential for full EIP-1559 compliance.                                                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  ● [HIGH] The provided code in `core/types/transaction.go` defines the EIP-1559 transaction data structure and related helpers, but does not include the semantic validation that
+`max_fee_per_gas` must be greater than or equal to `max_priority_fee_per_gas`. This check is a critical transaction validity rule defined in the EIP-1559 specification's reference
+implementation. While this validation is expected to be implemented in other parts of the client codebase (e.g., the transaction pool or state processor) which were not provided for
+review, its absence from the current context prevents confirmation of full compliance.
+
+╭─────────────────────────────────────────────────────────────────────────────────── Status: MISSING ───────────────────────────────────────────────────────────────────────────────────╮
+│ params/protocol_params.go                                                                                                                                                             │
+│ The provided code file `params/protocol_params.go` correctly implements the constant values specified in EIP-1559, such as the initial base fee and elasticity multiplier. However,   │
+│ it is critically missing the entire implementation of the EIP's core logic, including base fee calculation, gas limit validation, and transaction validation rules. Therefore, the    │
+│ code is non-compliant as it fails to implement the required behavior, despite its parameters being correct.                                                                           │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  ● [HIGH] The provided Go implementation file, `params/protocol_params.go`, only defines the constant parameters for EIP-1559, such as `DefaultBaseFeeChangeDenominator`,
+`DefaultElasticityMultiplier`, and `InitialBaseFee`. It does not contain any of the required consensus-critical logic for block validation, transaction processing, or base fee
+calculation as detailed in the EIP's `validate_block` pseudo-code. The core implementation of the fee market mechanism is entirely absent from this file.
+
+╭──────────────────────────────────────────────────────────────────────────────── Status: PARTIAL_MATCH ────────────────────────────────────────────────────────────────────────────────╮
+│ core/state_transition.go                                                                                                                                                              │
+│ The provided code from `core/state_transition.go` correctly implements the transaction-level aspects of EIP-1559, including fee cap validation, priority fee calculation, and fee     │
+│ distribution. However, the implementation is partial as it does not contain the critical block-level consensus rules for calculating the new base fee and validating the block gas    │
+│ limit, which are central to the EIP's fee market mechanism.                                                                                                                           │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  ● [HIGH] The provided implementation code from `core/state_transition.go` handles the application of a single transaction within an EIP-1559 context. It correctly uses a `baseFee`
+provided by the EVM context (`st.evm.Context.BaseFee`). However, the code does not contain the critical block-level logic for calculating this `base_fee_per_gas` for a new block based
+on the parent block's gas usage. This calculation is the core of the EIP-1559 dynamic fee market mechanism. The provided code is therefore an incomplete implementation of the full
+specification.
+  ● [HIGH] The provided code does not implement the EIP-1559 consensus rule that constrains the change in `gas_limit` between a parent and child block to a maximum of `parent_gas_limit
+/ 1024`. This check is part of block validation, not transaction state transition, and is therefore absent from the provided file.
+
+
+✓ Report saved to: output/prspec_eip1559_go-ethereum_20260214_065639.html
+@Fosurero ➜ /workspaces/PRSpec (main) $ exit
+exit

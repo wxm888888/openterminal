@@ -1,0 +1,87 @@
+root@ray-demo-jumphost:~# ssh root@10.0.0.86
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-170-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue Feb 17 07:46:20 PM CST 2026
+
+  System load:  0.02783203125       Processes:                158
+  Usage of /:   40.5% of 125.68GB   Users logged in:          0
+  Memory usage: 3%                  IPv4 address for docker0: 172.17.0.1
+  Swap usage:   0%                  IPv4 address for eth0:    10.0.0.86
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+298 updates can be applied immediately.
+205 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+2 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '24.04.4 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+
+        Welcome to Huawei Cloud Service
+
+Last login: Tue Feb 17 18:30:45 2026 from 10.0.0.251
+root@ray-demo-node0:~# hostname
+ray-demo-node0
+root@ray-demo-node0:~# # Configurable parameters
+root@ray-demo-node0:~# # Feel free to adapt to your environment and requirements
+root@ray-demo-node0:~# export OPENAI_API_KEY="my-very-secure-api-key"
+root@ray-demo-node0:~# export HEAD_NODE_IP="10.0.0.86"
+root@ray-demo-node0:~# export WORKER_NODE_IP="10.0.0.62"
+root@ray-demo-node0:~# # Start the Ray head node
+root@ray-demo-node0:~# docker run --name vllm-openai-ray-head \
+>     --rm \
+>     -d \
+>     --entrypoint /bin/bash \
+>     --network host \
+>     --runtime nvidia \
+>     --gpus all \
+>     --ipc host \
+>     --shm-size 16G \
+>     -e LD_LIBRARY_PATH='/usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/lib/x86_64-linux-gnu' \
+>     -e GLOO_SOCKET_IFNAME=eth0 \
+>     -e NCCL_SOCKET_IFNAME=eth0 \
+>     -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+>     -v /mnt/huggingface:/root/.cache/huggingface \
+>     -v /dev/shm:/dev/shm \
+>     vllm/vllm-openai:v0.15.1-cu130 \
+>     -c \
+>     "ray start --block \
+>         --head \
+>         --node-ip-address=$HEAD_NODE_IP \
+>         --port=6379"
+928fa35797086796a53b1424e3c3ce4a7d415ccd40502d501102a8fe6cb9bb93
+root@ray-demo-node0:~# docker logs vllm-openai-ray-head
+2026-02-17 03:46:51,232 INFO usage_lib.py:473 -- Usage stats collection is enabled by default without user confirmation because this terminal is detected to be non-interactive. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2026-02-17 03:46:51,236 INFO scripts.py:917 -- Local node IP: 10.0.0.86
+2026-02-17 03:46:54,696 SUCC scripts.py:956 -- --------------------
+2026-02-17 03:46:54,696 SUCC scripts.py:957 -- Ray runtime started.
+2026-02-17 03:46:54,696 SUCC scripts.py:958 -- --------------------
+2026-02-17 03:46:54,696 INFO scripts.py:960 -- Next steps
+2026-02-17 03:46:54,696 INFO scripts.py:963 -- To add another node to this Ray cluster, run
+2026-02-17 03:46:54,696 INFO scripts.py:966 --   ray start --address='10.0.0.86:6379'
+2026-02-17 03:46:54,696 INFO scripts.py:975 -- To connect to this Ray cluster:
+2026-02-17 03:46:54,696 INFO scripts.py:977 -- import ray
+2026-02-17 03:46:54,696 INFO scripts.py:978 -- ray.init(_node_ip_address='10.0.0.86')
+2026-02-17 03:46:54,696 INFO scripts.py:1009 -- To terminate the Ray runtime, run
+2026-02-17 03:46:54,696 INFO scripts.py:1010 --   ray stop
+2026-02-17 03:46:54,696 INFO scripts.py:1013 -- To view the status of the cluster, use
+2026-02-17 03:46:54,696 INFO scripts.py:1014 --   ray status
+2026-02-17 03:46:54,697 INFO scripts.py:1132 -- --block
+2026-02-17 03:46:54,697 INFO scripts.py:1133 -- This command will now block forever until terminated by a signal.
+2026-02-17 03:46:54,697 INFO scripts.py:1136 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+2026-02-17 03:46:54,697 INFO scripts.py:1141 -- Process exit logs will be saved to: /tmp/ray/session_2026-02-17_03-46-51_241973_1/logs/ray_process_exit.log
+root@ray-demo-node0:~# exit
+logout
+Connection to 10.0.0.86 closed.
+root@ray-demo-jumphost:~# exit
+exit

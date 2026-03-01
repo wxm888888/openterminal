@@ -1,0 +1,200 @@
+
+
+  ╔═══════════════════════════════════════════════════════════════════╗
+  ║                                                                   ║
+  ║   vLLM Semantic Router — Modality Routing Demo                    ║
+  ║                                                                   ║
+  ║   Automatic AR / Diffusion / Both routing via signal evaluation   ║
+  ║                                                                   ║
+  ╚═══════════════════════════════════════════════════════════════════╝
+
+  Architecture:
+
+  ┌──────────┐    ┌───────────┐    ┌──────────────────┐    ┌──────────────────────────┐
+  │  Client  │ →  │   Envoy   │ →  │  Semantic Router │ ─┬→│  AR   Qwen2.5-14B :8100  │
+  │          │    │  :8801    │    │  ext_proc :50051 │  │ │  (text generation)      │
+  │          │    │           │    │                  │  │ └──────────────────────────┘
+  │          │    │           │    │  mmBERT-32K      │  │ ┌──────────────────────────┐
+  │          │    │           │    │  modality signal │  └→│  DIF  Qwen-Image   :8091  │
+  │          │    │           │    │                  │    │  (image generation)     │
+  └──────────┘    └───────────┘    └──────────────────┘    └──────────────────────────┘
+
+  Modality Signals:
+    AR         Text-only prompts       → Qwen/Qwen2.5-14B-Instruct (vLLM)
+    DIFFUSION  Image generation prompts → Qwen/Qwen-Image (vLLM-Omni)
+    BOTH       Text + image prompts     → AR text + Diffusion image (parallel)
+
+  Config: scripts/demo-modality/router-config.yaml
+
+────────────────────────────────────────────────────────────────────────
+
+  Checking infrastructure...
+
+    ✓ AR Model (Qwen2.5-14B) @ http://127.0.0.1:8100/health
+    ✓ Diffusion (Qwen-Image) @ http://127.0.0.1:8091/health
+    ✓ Envoy Proxy @ http://127.0.0.1:19000/ready
+    ✓ Semantic Router @ http://127.0.0.1:8080/health
+
+────────────────────────────────────────────────────────────────────────
+
+   DEMO 1   Text Generation (AR Modality)
+
+  PROMPT
+  ┌─────────────────────────────────────────────────────────────
+  │ Explain the theory of relativity in three sentences
+  └─────────────────────────────────────────────────────────────
+
+  Sending to Envoy → Router (modality classification) → ...
+
+  RESPONSE — Routed to AR  (1146ms)
+  ┌─────────────────────────────────────────────────────────────
+  │ model:   Qwen/Qwen2.5-14B-Instruct
+  │ tokens:  122
+  │
+  │ The theory of relativity, comprising special relativity and
+  │ general relativity, fundamentally changed our understanding of
+  │ space, time, and gravity. Special relativity, introduced by
+  │ Albert Einstein in 1905, posits that the laws of physics are the
+  │ same for all non-accelerating observers, and that the speed of
+  │ light within a vacuum is the same no matter the speed at which
+  │ an observer travels. General relativity, published in 1915,
+  │ extends the theory to include acceleration and introduces the
+  │ conc
+  └─────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────
+
+   DEMO 2   Image Generation (DIFFUSION Modality)
+
+  PROMPT
+  ┌─────────────────────────────────────────────────────────────
+  │ Generate a photorealistic image of a golden retriever puppy playing in autumn leaves
+  └─────────────────────────────────────────────────────────────
+
+  Sending to Envoy → Router (modality: DIFFUSION) → Qwen-Image...
+  (Image generation may take 15-60 seconds)
+
+  RESPONSE — Routed to DIFFUSION  (1s)
+  ┌─────────────────────────────────────────────────────────────
+  │ model:   Qwen/Qwen-Image (via vLLM-Omni)
+  │ status:  ✓ Image generated
+  └─────────────────────────────────────────────────────────────
+
+  [291 KB, 512×512]
+
+▅▆▋▎▋▋▂▃▝▋▌▌▍▌▔▆▆▀▀▃▂▆▀▀▖▌▅▅▀▀▅▆▗▀▃▃▃▀▃▀▃▀▀▀▀▀▀▀▀▃
+▌▖▋▌▔▌▅▀▀▌▌▌▃▃▃▃▃▀▀▀▀▃▃▃▃▘▘▎▆▝▀▋▌▍▗▅▅▀▀▀▀▆▃▖▍▋▆▅▅▅
+▀▖▌▘▅▌▖▎▗▌▍▝▅▅▀▀▀▅▅▅▅▅▅▅▅▅▅▂ ▌▘▝▌▌▌▗▅▅▀▀▀▍▋▋▌▋▍▍▗▅
+▋▌▌▎▊▌▗▀▘▘▘▅▃▖▂▂▂▂▂▂▃▂▂▂▂▂▂▂▂▂▂▌▌▌▌▅▅▀▖▌▌▌▂▌▋▍▌▌▗▀
+▊▌▌▍▋▌▌▍▌▌▍▀▀▀▂▃▅▅▅▅▅▆▆▆▆▆▆▅▆▆▅▃▖▌▌▍▗▝▌▋▌▀▀▀▘▌▌▌▌▆
+▝▋▝▃▀▃▘▍▝▝▃▖▗▗▘▃▀▀▃▖▂▃▃▃▃▃▂▋▗▂▗▔▅▀▖▖▂▂▗▗▂▃▃▃▃▃▖▍▌▝
+▀▀▀▀▀▀▀▀▀▃▊▗▘▔▂▃▅▀▍▀▀▀▀▀▀▀▀▀▋▅▅▀▃▔▝▖▃▃▀▀▅▅▅▅▅▝▝▃▃▃
+▃▃▂▍▔▔▀▃ ▂▗▋▎▗▘▋▍┃▍▂▃▃▖▆▔▗▗▃▁▌▎▆▅▖▊▖▀▀▀▀▃▃▀▀▝▀▃▀▀▀
+▆▆▁▂▂▂▃▃▃▀▀▋▗▘▗▋▕▊▍▝▀▀▘▅▀▆▝▀▘▋▌▌▔▋▀▝▅▅▅▅▀▀▅▀▀▀▅▅▅▅
+▃▃▃▀▀▀▀▃▃▃▃▃▋▀▀▘▌▋▍▆▔▌▂▃▃▃▂▖▆▋▂▖▀▘▌▍▀▌▍▖▖▌▘▆▊▂▀▀▃▂
+▅▅▅▅▀▗▀━━▂▂▃▘▗▀▅▖▖▌▗▗▗▗▗▀▀▖▖▋▝▆▅▃▖▋▌▅▅▅▅▅▀▃▀▀▀▀▅▆━
+▃▀▍▗▋▃▅▆▆▆▆▂▗▏▍▀▌▖▕▀▃▀▗▌▀▃▌▖▃▋▍▊▌▍▘▌▌▘▂▃▃▖┴▗▀▃▖▊▌▀
+╸▁▌▀▆▃▅▆▆▋▖▌▋▘▋▊▌▌▎▗▆▆▝▀▀▀▘▍▋▌▌▕▍▌▌▆▃▀▘▎╶▀▖▆▝▃▘▘▀▘
+▂▌▘▃▃▃▂▅▅━▂▝▌▀▋▋▌▌▌▋▖▂▂▂▂▘▋▝▖▌▌▊▍▗▁▂▂▗▀▘▃▅▖▂▀▖▗▃▂▂
+▀▃▃▂▌▂▃▃▃▅▆▋▎▀▖▋▌▌▘▗▎▆▅▆▗▀━▋▗▘▌▊▍▀▀▆━▆▃▝▃▘▆▆▀▀▀▘▃▅
+▃▃▃▃▖▔▀▆━▗▃▘▗▅▋▎▌▌▌▗▀▀▖▘▗▃▀▀▘▘▋▊▎▂▁▃▀▅▂▗▀▁▂▂▃▂▅▁▆╸
+▃▌▅▆▆▔▝▁▀▅▃▗▘▆▝▖▌▌▌▍▍▋▌▃▗▆▀▘╶▃▃▅▅▆▔▌▁▂▀▘▘▝▞▔┭▗▞▅▃▆
+▃▀▅▀▝▂▀▖▂▂▁▍▀▅▀▅▖▌▌▝▅▅▗▘▘▅▅▁▁▃▀▃▂▂▆▅▅▀▃▅▌▆▎▆▅▍▝▖▘╌
+▕▊▀━▍▆▅▀▅▀▀▅▘▘▖▝▃▃▖▆▍▀▋▎▁▖▀▗▗▀▀─▅▁▂▀▅▂▆▘▅▆▆▀▀▃▀▀▎━
+▃▂▃▂▂▂▃▃▊▎▁┇▅▝▀▀┯─▌▀▘▃▋▀▂▃▀▀▘▍▁▀▅▆▂▀▀▀▅▖▌▁▂▅▔▀▘▂▝▃
+▆▀▀▅▀▝▂▂▅▃▔▀▝▁▅━▂▂▂▃▀▀▀▀▀▃▃▃▃▅▅▀▃▂▃▀▀▀▀▀▃▀▀▀▅▅▆▀▅▅
+▆▀▅▀▀▅▔▆▅▀▅━▃▌▔▃▀▆╸▂▃▀▆▗▂▝▂▂▃▂▃▃▃▀▀▅▖▖▌▃▃▀▃┯▆▋▃▀▀▅
+▀▘▅▖▂▃▀▅▀▅▆▝▗▃▅▆▔▅▅▆▂▃▆▆▆▅▅▅▅▝▝▅▅▀▃▃▃▂▃▃▃▀▀▀▅▆▂▅▔▔
+▃▂▗▆▆▅▃▀▅▀▃▔▀▂▂▂▝▅▀▅▅▋▀▖▔▔▌▅▀▗▀▝▅▁▌▆▅▅▆▂▃▗▘▀▅▆▅▃▀▀
+▔▆▆▆▖▌▂▂▂▗▀▀▃▃▃▂▘▝▃▀▀▀▅▅▆▆▗▀▅▖▅▅▅▅▀▃▘▆▆▌▌▝▗▀▃▌▃▀▅▅
+
+
+────────────────────────────────────────────────────────────────────────
+
+   DEMO 3   Multimodal Response (BOTH Modality)
+
+  PROMPT
+  ┌─────────────────────────────────────────────────────────────
+  │ Explain what a fractal is in two sentences and generate an image of the Mandelbrot set
+  └─────────────────────────────────────────────────────────────
+
+  Sending to Envoy → Router (modality: BOTH) → AR + Diffusion in parallel...
+  (Parallel generation: text + image)
+
+  RESPONSE — Routed to BOTH  (1s)
+
+  [1/2] Text (from Qwen2.5-14B)
+  ┌─────────────────────────────────────────────────────────────
+  │ A fractal is a mathematical set that exhibits a repeating
+  │ pattern displayed at every scale, it is also known for its
+  │ intricate and often self-similar structure that continues to
+  │ reveal more detail the closer you look.
+  │
+  │ I'm unable to generate or provide images directly, but I can
+  │ describe the appearance of the Mandelbrot set: it's a famous
+  │ fractal characterized by a heart-shaped body with elaborate,
+  │ infinitely complex borders that feature an endless variety of
+  │ smaller, detailed shapes that resemb
+  └─────────────────────────────────────────────────────────────
+
+  [2/2] Image (from Qwen-Image)
+  ┌─────────────────────────────────────────────────────────────
+  │ ✓ Image generated
+  └─────────────────────────────────────────────────────────────
+
+  [345 KB, 512×512]
+
+▗▘▖▊▁▅▅▅▅▆▃▕▗▅▆━▃━━▃▀▀▘▝▝▀▀▃▀▀▂╍╻▅▗▀▖▗▗▃▖▍▌┲╺▝▃▂▃▃
+━▅▅▅▍▎▋▔╸▆▖▖│▆▅▀▃▃▀▅▁▆▅▆▆▖▀╼╴▎┳╱▗▀▝▀▘▂▍━▌▅▆▏▗━▂▔▆▂
+▂▃▅▆▆▂▗▀▀▖╺▊▅▀▀▋▅▆▁▆╼▎▀▋▔╍▆┊▎┅▎▊▘▘▆▆▔▆▅▋▅▅▘▗▀▅▅▆▆▆
+▂▂▅▀▃▀▘▅▃▝▀▀▃▂▂▁▁▆▅─▗▀▀▁▂┙▗▅▘╱▅▞▀▆▆▆▌▌▞▋▂▂▊▍▃▃▃▀▕▌
+▂▃▃▂▂▅▅▃▆▂▁▂▂▆▆▆▅▅▁▀▆▆▖▁▂▁▃▆▃▅▍▃╵▅▆▗▖▅▀▃▋▀▂▆▃▃▞┏▃▅
+▅▅▀▅▅▀▖▗▃▗▗▃▖▅▀▖┒▗▝▔╸▀▝▗▃▀▖▍╳▅▍▃▘▖▆▅▆╇▗▆▅▀▅▋▔▝▅▂▃▞
+▃▃▃▂▃▘▘▀▀▗▞▆▖▍▔▝━╶▆▔╌▗▅▃▌┛▁┬▃▌▃▘▂▘▃▂▂▃▃▗▀━▃▅▖▂▀▀▅▀
+▂▅▆▀▆▅▂▂▂▁▞▆▋▖┻▖┅▁╳▁╺▔▘▋┋▃▊╹┇▝▕▗▆▝▃▃▅▅▆▔▋╌▅▅▖▌▀▅▗▆
+▀▀▅▀▃▃▂▁▁▆▖▅▗▅▘▍▂┗▁▗▃┍▅▗▃▃▆╍╾▖▀▅┏▀┛▂▘▅▅▆▂▘▝▀▋▗▀▘▘╼
+▗▅▖▔▀▂┳▖▅▔▅▘▃┑╾▂▃▃▀▅┮▆▅▀▁▁┳▃▀▝▝▋▁▃━▁▁▂▗▔┙▃▅▅▆▂▊▗▋▆
+▃▂▀▃▂▔▂▁▔▅▀▔▔▔▂▗▀▃▃▃▀▂▗▀▃▆▔▖▀▃▂▃│▍▁▂▔┞▗▌▋▂▀▀▀▎▝▀▘▀
+▔▅▃▁▀▀▅▀▃▔╸▆▗▅▃▀▀▃▘▘▗▃▘▍▂▘▊▍▂▂▅▗▆▆▅▝▅▆▂▂▎▅▂▃┛▆▔▋▀▃
+▆▀▀▂▝▂▃▅▀▂▂▃▝▍▅▅┭▃▂▂▔▆▖▅▂▂▃▀▀▀▊▔▃▃▃▂▀▂▘╉▍▖▂▅▌▗▃▀╌▀
+▀▃▖▅▅▀▞▅▃▁▅▀▃▀▆▀▅▗▘▔▔▃▗▅▀▅▅▆▆▆▅▅▖▍▆▔▌▌▘▋▅▆▗▅▂▅▖▆▗▃
+▃▅▅▀▖▍▆▀▃▃┓▎▃▝▔╼▘▌▀▅▆▔╴┋╌▃▀▆▍▆▊▌▍▃▀▆▆┊▘▌▘▋▘▗▂▘▗▆▃▀
+▗▘▁▆▝▅▀▅▅━▃▂▀▀▀▀└╸╶▅▀▗▔▖━▅▀▀▀▆▝▃▌▃▅▅▊▅▃▌▘▀▀▔▅╏▀▗▀▅
+▅▅▅▆▃▃▀▗▀▃▃▆▎▗▁▀▃▃▃▅▃▀▃▘▔▊┒▅╻▃▀┆▌▘▗▀▀▗▃▃▃▀▀▖▗▎╴▝▃▂
+▁▅▀▃▍▊▃▘▝▂▂▂▋▀▘▂▃▃▂▂▌▀━▅▅▁┫┅▀▁▗▗▖▀╴┗▂▍▀▅▃▃▃▃▆▆▅▀▅▀
+▀▅▃▀▀▌▝▃▅▀▀▀▅▀▔▆┑╻╵▍▀▂▃▔▊▃▀▔╸┄┎╾▖╸▘▆▔▖▘└▃▃▀▃▂▅▃▃▀▔
+▃▃▂▎▍▝▂▃▀▅▔╺▂╸▖▋▃┻▘▍▅▂▂▃▝▔▆▅▃━▂▅▃▀▃▃▖▗▘▀▃▀▃▂▂▃▖▅▅▖
+╴▝▀▂▅▀▘▃▂▆▗▂▘▁▅▔▌▁▗▗▔▂▆▅▘▌▅▅▀▔▔▝▅▁▝▁━▀▆▂▃▀▂▂┲▂▅▀▀▅
+▀▀▖▆▗▅▅▘▂▃▃▅▘▔▃▂┳▝▅▅▅▝▅▌▅▂▂▃▅▔▖▃▘▂▀▝▂┛▔▃▃▖▃▗▃▎▝▅▃▞
+▋▋▋▂▝▅▆▅▃▃▖▂▆▔▗▅▀▌▀▀▂▃▀▅▀▖▖▃▅▗▀▆▃▖▃▀▗▀▀▀▅▅▀▅▆▀▖▃▔▂
+▃▖▃▀▀▖▗▏▘▃▀▖▖▗▃▃▌▔▆▆━▝▅▌┺▌▝▅▘▝▀▀▏▎━▗▃▅▀▀▀▃▗▆▅▃▂╲▅▃
+▀┊▘▗▀▘▆▀▖▂▃▘▘▘▀▀▀▃▀▋▖╸▘▀▘▋▍▂▅▃▋▗▎▃▀╺▍▌▔▆▔▔▆▅▅▆▖▊▋▎
+
+
+────────────────────────────────────────────────────────────────────────
+
+  Summary — Modality Routing Demo
+
+  The semantic router automatically classifies prompts and routes them
+  to the appropriate backend — no client-side logic needed.
+
+  Routing Results:
+
+  #     Prompt                                                  Modality
+  ───── ─────────────────────────────────────────────────────── ────────────
+  1     Explain the theory of relativity in three sentences...  AR
+  2     Generate a photorealistic image of a golden retrieve... DIFFUSION
+  3     Explain what a fractal is in two sentences and gener... BOTH
+
+  Infrastructure:
+    AR Model:       Qwen/Qwen2.5-14B-Instruct     @ localhost:8100 (vLLM)
+    Diffusion:      Qwen/Qwen-Image               @ localhost:8091 (vLLM-Omni)
+    Classifier:     mmBERT-32K modality router     (hybrid: classifier + keyword)
+    Router:         Semantic Router                @ :50051 (ext_proc)
+    Proxy:          Envoy                          @ :8801
+    Config:         scripts/demo-modality/router-config.yaml
+
+
+  ╔═══════════════════════════════════════════════════════════════════╗
+  ║                       Demo Complete!                              ║
+  ╚═══════════════════════════════════════════════════════════════════╝

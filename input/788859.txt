@@ -1,0 +1,55 @@
+root@ray-demo-jumphost:~# ls -lh vllm-openai.tar
+-rw------- 1 root root 18G Feb 16 19:26 vllm-openai.tar
+root@ray-demo-jumphost:~# printenv HF_HOME
+/mnt/huggingface
+root@ray-demo-jumphost:~# showmount -e
+Export list for ray-demo-jumphost:
+/srv/huggingface 10.0.0.0/16,127.0.0.0/8
+root@ray-demo-jumphost:~# mount | grep /mnt/huggingface
+127.0.0.1:/srv/huggingface on /mnt/huggingface type nfs4 (rw,relatime,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=127.0.0.1,local_lock=none,addr=127.0.0.1)
+root@ray-demo-jumphost:~# ssh root@10.0.0.86
+Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-170-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue Feb 17 01:45:59 PM CST 2026
+
+  System load:  0.54931640625       Processes:                153
+  Usage of /:   40.5% of 125.68GB   Users logged in:          0
+  Memory usage: 5%                  IPv4 address for docker0: 172.17.0.1
+  Swap usage:   0%                  IPv4 address for eth0:    10.0.0.86
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+298 updates can be applied immediately.
+205 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+2 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '24.04.4 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+
+        Welcome to Huawei Cloud Service
+
+Last login: Tue Feb 17 13:37:18 2026 from 10.0.0.251
+root@ray-demo-node0:~# printenv HF_HOME
+/mnt/huggingface
+root@ray-demo-node0:~# mount | grep /mnt/huggingface
+10.0.0.251:/srv/huggingface on /mnt/huggingface type nfs4 (rw,relatime,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=10.0.0.86,local_lock=none,addr=10.0.0.251)
+root@ray-demo-node0:~# ls -lh vllm-openai.tar
+-rw------- 1 root root 18G Feb 17 13:36 vllm-openai.tar
+root@ray-demo-node0:~# docker images
+REPOSITORY         TAG             IMAGE ID       CREATED       SIZE
+vllm/vllm-openai   v0.15.1-cu130   50c07525d971   12 days ago   18.8GB
+root@ray-demo-node0:~# exit
+logout
+Connection to 10.0.0.86 closed.
+root@ray-demo-jumphost:~# exit
+exit

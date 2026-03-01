@@ -1,0 +1,121 @@
+█■ ~/git/zPodFactory/zpod-vcf-deployer   main  ?7                                                                                                  0ms  tsugliani  zboxdev
+█▓░ ❱ uv run zpod-vcf-deployer.py -n vcf902-demo
+Starting zPod VCF deployment...
+🚀 Deploying zPod: vcf902-demo
+Status: ACTIVE
+Components:
+  ACTIVE: zbox.vcf902-demo.zpodfactory.io (10.196.135.2)
+  ACTIVE: esxi11.vcf902-demo.zpodfactory.io (10.196.135.11)
+  ACTIVE: esxi12.vcf902-demo.zpodfactory.io (10.196.135.12)
+  ACTIVE: esxi13.vcf902-demo.zpodfactory.io (10.196.135.13)
+  ACTIVE: vcfinstaller.vcf902-demo.zpodfactory.io (10.196.135.25)
+✅ zPod deployment successful!
+✅ Creating zPod completed in 00:05:01
+🔍 Fetching zPodFactory host IP from settings...
+✓ zPodFactory host IP: 172.16.42.11
+📋 Building VCF template...
+📄 Writing VCF template to: /tmp/vcf902-demo-20260214-142842.json
+🌐 Configuring DNS records...
+  ✓ DNS record for vcsa (10.196.135.10) created
+  ✓ DNS record for nsx21 (10.196.135.21) created
+  ✓ DNS record for nsx (10.196.135.20) created
+  ✓ DNS record for vcfops (10.196.135.28) created
+  ✓ DNS record for vcfopsfleetmgr (10.196.135.27) created
+  ✓ DNS record for vcfopscollector (10.196.135.29) created
+  ✓ DNS record for sddcmgr (10.196.135.26) created
+📦 Configuring VCF depot and downloading bundles...
+⚠️ Service error, Retrying in 30 seconds... (Attempt  1/10) - ConnectError
+⚠️ Service error, Retrying in 30 seconds... (Attempt  2/10) - HTTP 502
+⚠️ Service error, Retrying in 30 seconds... (Attempt  4/10) - HTTP 502
+⚙️ Configuring depot settings for offline mode...
+✓ Configuring depot for offline mode:
+  Hostname: offlinedepot.zpodfactory.io
+  Username: vcfuser
+  Password: ********
+  Port: 443
+✓ Depot settings updated for offline mode
+🔄 Checking depot sync status...
+✓ Depot sync status: UNSYNCED
+⚠️ Depot is not in sync. Triggering depot sync...
+✅ Depot sync triggered successfully!
+
+⏳ Waiting for depot to sync...
+This may take several seconds. Please wait...
+Press Ctrl+C to interrupt at any time.
+⏳ Depot status: SYNC_IN_PROGRESS
+✅ Depot is now in sync!
+
+📦 Fetching VCF 9.0.2.0 components...
+✓ Found 7 components
+
+📊 Summary: 7 components, 7 bundles, 55.35 GB total
+Skipping bundles not needed by config template: VRA
+
+🚀 Checking bundle status and initiating downloads for PENDING bundles...
+  NSX_T_MANAGER: 374809f7-ae3f-5926-aeaa-3fdb299ea2a4... initiating download (PENDING)
+    ✓ Download initiated
+  SDDC_MANAGER: ba069411-27d4-5288-bb0e-0cf96d18c35e... initiating download (PENDING)
+    ✓ Download initiated
+  VCF_OPS_CLOUD_PROXY: a1adaa0d-9034-5f47-b53f-8e51d17a9e46... initiating download (PENDING)
+    ✓ Download initiated
+  VROPS: 8a3336da-1b81-5144-b43e-d84eae7a8d8f... initiating download (PENDING)
+    ✓ Download initiated
+  VCENTER: 89dd4600-00be-566b-90ff-854c3cba92cb... initiating download (PENDING)
+    ✓ Download initiated
+  VRSLCM: 40ec2e91-a6f9-5521-9f9a-50df78ea8219... initiating download (PENDING)
+    ✓ Download initiated
+
+📊 Download Summary: 6/6 scheduled for download
+Press Ctrl+C to interrupt monitoring at any time.
+                                                  VCF Installer - Bundle Depot Download Status
+┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+┃ Component           ┃ Product Name                                        ┃ Bundle ID                            ┃     Size ┃ Status         ┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+│ NSX_T_MANAGER       │ VMware NSX                                          │ 374809f7-ae3f-5926-aeaa-3fdb299ea2a4 │ 10.57 GB │ SUCCESS        │
+│ SDDC_MANAGER        │ SDDC Manager                                        │ ba069411-27d4-5288-bb0e-0cf96d18c35e │  2.03 GB │ SUCCESS        │
+│ VCF_OPS_CLOUD_PROXY │ VMware Cloud Foundation Operations Collector        │ a1adaa0d-9034-5f47-b53f-8e51d17a9e46 │  2.77 GB │ SUCCESS        │
+│ VROPS               │ VMware Cloud Foundation Operations                  │ 8a3336da-1b81-5144-b43e-d84eae7a8d8f │  2.78 GB │ SUCCESS        │
+│ VCENTER             │ VMware vCenter                                      │ 89dd4600-00be-566b-90ff-854c3cba92cb │ 12.62 GB │ SUCCESS        │
+│ VRSLCM              │ VMware Cloud Foundation Operations fleet management │ 40ec2e91-a6f9-5521-9f9a-50df78ea8219 │  1.48 GB │ SUCCESS        │
+└─────────────────────┴─────────────────────────────────────────────────────┴──────────────────────────────────────┴──────────┴────────────────┘
+
+🎉 All downloads completed successfully!
+✅ Configuring VCF depot and downloading bundles completed in 00:10:18
+🔍 Checking for existing validation...
+No existing validation found. Starting validation...
+Starting fresh validation and deployment. Proceeding with validation and new deployment...
+🔍 Initiating SDDC validations...
+Validation ID: 8aff5fb1-0d0b-40c8-91d1-440fb0198ee0
+VCF Spec Validation Status: COMPLETED ✅ (Result: SUCCEEDED)
+  • Deployment Specification               SUCCEEDED ✓
+  • DNS Resolution                         SUCCEEDED ✓
+  • Security Configuration                 SUCCEEDED ✓
+  • Versions and Bundles                   SUCCEEDED ✓
+  • ESX Host Configuration                 SUCCEEDED ✓
+  • Time Synchronization                   SUCCEEDED ✓
+  • Existing SDDC Manager Configuration    SUCCEEDED ✓
+  • vSAN Disks Availability (AllFlash)     SUCCEEDED ✓
+  • Password Policies                      SUCCEEDED ✓
+  • Network Configuration                  SUCCEEDED ✓
+  • vMotion Network Connectivity           SUCCEEDED ✓
+  • vSAN Network Connectivity              SUCCEEDED ✓
+  • NSX Host Overlay Network Connectivity  SUCCEEDED ✓
+
+✅ SDDC validation completed successfully!
+✅ Validating SDDC Spec completed in 00:03:58
+🚀 Initiating SDDC deployment...
+Creating new SDDC deployment...
+✓ New SDDC deployment created with ID: d3fef802-a27b-4ec7-95ed-1c5488993640
+VMware Cloud Foundation Deployment: COMPLETED_WITH_SUCCESS
+  MILESTONE: Deploy vCenter                                       ✓ [14:47:27]
+  MILESTONE: Deploy SDDC Manager                                  ✓ [15:16:10]
+  MILESTONE: Configure the vSphere cluster                        ✓ [14:43:03]
+  MILESTONE: Deploy and configure NSX                             ✓ [14:43:03]
+  MILESTONE: Deploy and configure the fleet management appliance  ✓ [16:04:39]
+  MILESTONE: Deploy and configure the operations appliance        ✓ [16:19:11]
+
+✅ SDDC deployment completed successfully!
+✅ Deploying SDDC completed in 02:08:22
+✅ Total deployment time: 02:27:42
+█■ ~/git/zPodFactory/zpod-vcf-deployer   main  ?7                                                                                       2h 27m 42.361s  tsugliani  zboxdev
+█▓░ ❱ exit

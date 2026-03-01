@@ -1,0 +1,39 @@
+
+ 3.4.7  clawkit  main
+› bin/sync
+Syncing:  podrick, gober
+Host:     [REDACTED]
+
+[✔] Stopping openclaw gateway...
+[✔] Checking podrick for changes...
+
+┌─────────┬─────────────────────┬─────────────────────┐
+│ podrick │ Local               │ Remote              │
+├─────────┼─────────────────────┼─────────────────────┤
+│ Latest  │ 2026-02-15 13:40:47 │ 2026-02-14 12:33:57 │
+│ Changes │ 1 file(s)           │ 1 file(s)           │
+└─────────┴─────────────────────┴─────────────────────┘
+
+Both sides differ.
+Sync direction? Upload local -> remote
+[✔] Uploading local -> remote...
+  Done.
+
+[✔] Checking gober for changes...
+
+┌─────────┬─────────────────────┬─────────────────────┐
+│ gober   │ Local               │ Remote              │
+├─────────┼─────────────────────┼─────────────────────┤
+│ Latest  │ 2026-02-15 13:35:57 │ 2026-02-15 13:20:47 │
+│ Changes │ 1 file(s)           │ 1 file(s)           │
+└─────────┴─────────────────────┴─────────────────────┘
+
+Both sides differ.
+Sync direction? Compare (view diff)
+Both sides differ.
+Sync direction? Upload local -> remote
+[✔] Uploading local -> remote...
+  Done.
+
+[✔] Starting openclaw gateway...
+[✔] Sync complete.

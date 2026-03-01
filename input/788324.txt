@@ -1,0 +1,30 @@
+$ docker run -it --rm -p 25565:25565 -eula=true djaytan/papermc-server:latest
+🚀 Starting PaperMC server for the first time...
+⚙️ Preparing configuration files...
+🧾 File eula.txt processed.
+ℹ️ No custom YAML overrides configuration files found in /config.
+📦 Generating configuration files...
+✅  Configuration files successfully generated!
+✨  PaperMC server ready to start!
+Applying patches
+[14:54:35 INFO]: <snip>
+[14:54:42 INFO]: Preparing level "world"
+[14:54:45 INFO]: Preparing start region for dimension minecraft:overworld
+[14:54:45 INFO]: Preparing spawn area: 2%
+[14:54:45 INFO]: Preparing spawn area: 2%
+[14:54:46 INFO]: Preparing spawn area: 4%
+[14:54:47 INFO]: Preparing spawn area: 85%
+[14:54:47 INFO]: Time elapsed: 1558 ms
+[14:54:47 INFO]: Preparing start region for dimension minecraft:the_nether
+[14:54:47 INFO]: Preparing spawn area: 2%
+[14:54:47 INFO]: Time elapsed: 419 ms
+[14:54:47 INFO]: Preparing start region for dimension minecraft:the_end
+[14:54:47 INFO]: Preparing spawn area: 2%
+[14:54:47 INFO]: Time elapsed: 150 ms
+[14:54:47 INFO]: Done preparing level "world" (5.232s)
+[14:54:47 INFO]: Running delayed init tasks
+[14:54:47 INFO]: Done (14.264s)! For help, type "help"
+[14:54:50 INFO]: UUID of player Djaytan is ce4c87ff-d276-443a-a4a1-510839b7ff02
+[14:54:50 INFO]: Djaytan joined the game
+[14:54:50 INFO]: Djaytan[/0.0.0.0:47164] logged in with entity id 37 at ([world]-508.5, 99.0, -129.5)
+[14:54:54 INFO]: <Djaytan> Hello there!

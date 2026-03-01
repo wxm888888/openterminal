@@ -1,0 +1,47 @@
+xdream8@void file-rs 2$ hyperfine --warmup 3 --runs 100 'target/optimized/file-rs *' 'file *'                                                                                       git@main
+Benchmark 1: target/optimized/file-rs *
+  Time (mean ± σ):       1.2 ms ±   0.2 ms    [User: 0.7 ms, System: 3.1 ms]
+  Range (min … max):     0.9 ms …   2.0 ms    100 runs
+
+  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to disable the shell completely.
+
+Benchmark 2: file *
+  Time (mean ± σ):      29.8 ms ±   1.5 ms    [User: 12.5 ms, System: 17.1 ms]
+  Range (min … max):    28.0 ms …  35.3 ms    100 runs
+
+Summary
+  target/optimized/file-rs * ran
+   24.66 ± 4.66 times faster than file *
+xdream8@void file-rs 2$ hyperfine --warmup 3 --runs 100 'target/optimized/file-rs --extension *' -i 'file --extension *'                                                            git@main
+Benchmark 1: target/optimized/file-rs --extension *
+  Time (mean ± σ):       1.1 ms ±   0.2 ms    [User: 0.7 ms, System: 2.7 ms]
+  Range (min … max):     0.7 ms …   1.5 ms    100 runs
+
+  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to disable the shell completely.
+
+Benchmark 2: file --extension *
+  Time (mean ± σ):      30.4 ms ±   2.2 ms    [User: 12.6 ms, System: 17.6 ms]
+  Range (min … max):    28.2 ms …  39.3 ms    100 runs
+
+  Warning: Ignoring non-zero exit code.
+  Warning: The first benchmarking run for this command was significantly slower than the rest (39.3 ms). This could be caused by (filesystem) caches that were not filled until after the first run. You are already using the '--warmup' option which helps to fill these caches before the actual benchmark. You can either try to increase the warmup count further or re-run this benchmark on a quiet system in case it was a random outlier. Alternatively, consider using the '--prepare' option to clear the caches before each timing run.
+
+Summary
+  target/optimized/file-rs --extension * ran
+   28.16 ± 5.15 times faster than file --extension *
+xdream8@void file-rs 2$ hyperfine --warmup 3 --runs 100 'target/optimized/file-rs --mime-type *' 'file --mime-type *'                                                               git@main
+Benchmark 1: target/optimized/file-rs --mime-type *
+  Time (mean ± σ):       1.2 ms ±   0.4 ms    [User: 0.9 ms, System: 3.1 ms]
+  Range (min … max):     0.8 ms …   4.7 ms    100 runs
+
+  Warning: Command took less than 5 ms to complete. Note that the results might be inaccurate because hyperfine can not calibrate the shell startup time much more precise than this limit. You can try to use the `-N`/`--shell=none` option to disable the shell completely.
+  Warning: Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interferences from other programs. It might help to use the '--warmup' or '--prepare' options.
+
+Benchmark 2: file --mime-type *
+  Time (mean ± σ):      30.4 ms ±   1.8 ms    [User: 12.5 ms, System: 17.6 ms]
+  Range (min … max):    28.2 ms …  37.6 ms    100 runs
+
+Summary
+  target/optimized/file-rs --mime-type * ran
+   24.99 ± 8.75 times faster than file --mime-type *
+xdream8@void file-rs 2$                                                                                                                                                             git@main

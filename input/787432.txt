@@ -1,0 +1,37 @@
+xdream8@void file-rs 2$ file-rs *                                                    git@main
+src            : directory
+build.rs       : ASCII text
+target         : directory
+Cargo.lock     : ASCII text
+README.md      : ASCII text
+bench2.png     : ASCII text
+dprint.json    : ASCII text
+bench1.png     : ASCII text
+Cargo.toml     : ASCII text
+bench3.png     : ASCII text
+LICENSE        : ASCII text
+xdream8@void file-rs 2$ file-rs --extension *                                        git@main
+Cargo.lock     : lock
+LICENSE        : ???
+Cargo.toml     : toml
+bench2.png     : png
+target         : ???
+README.md      : md
+bench1.png     : png
+build.rs       : rs
+bench3.png     : png
+dprint.json    : json
+src            : ???
+xdream8@void file-rs 2$ file-rs --mime-type *                                        git@main
+LICENSE        : text/plain
+src            : inode/directory
+bench2.png     : image/png
+target         : inode/directory
+bench1.png     : image/png
+build.rs       : text/plain
+dprint.json    : text/plain
+Cargo.toml     : text/plain
+Cargo.lock     : text/plain
+README.md      : text/html
+bench3.png     : image/png
+xdream8@void file-rs 2$                                                              git@main

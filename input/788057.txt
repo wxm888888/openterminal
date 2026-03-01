@@ -1,0 +1,90 @@
+dsleung@vllm-demo:~$ git clone -b v0.15.1 https://github.com/vllm-project/vllm.git
+Cloning into 'vllm'...
+remote: Enumerating objects: 172945, done.
+remote: Counting objects: 100% (8/8), done.
+remote: Compressing objects: 100% (8/8), done.
+remote: Total 172945 (delta 0), reused 1 (delta 0), pack-reused 172937 (from 1)
+Receiving objects: 100% (172945/172945), 158.92 MiB | 15.14 MiB/s, done.
+Resolving deltas: 100% (136546/136546), done.
+Note: switching to '1892993bc18e243e2c05841314c5e9c06a80c70d'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+dsleung@vllm-demo:~$ pushd vllm/
+~/vllm ~
+dsleung@vllm-demo:~/vllm$ # Specify your image repository, namespace, name and tag
+# Feel free to change these values
+IMAGE_REPOSITORY='quay.io'
+IMAGE_NAMESPACE='donaldsebleung'
+IMAGE_NAME='vllm-cpu-release-repo'
+IMAGE_TAG='20260214-disable-avx512'
+export IMAGE="$IMAGE_REPOSITORY/$IMAGE_NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
+dsleung@vllm-demo:~/vllm$ # Build our custom vLLM CPU image with AVX-512 disabled
+docker build -f docker/Dockerfile.cpu \
+    --build-arg VLLM_CPU_DISABLE_AVX512=true \
+    --build-arg max_jobs=6 \
+    --target vllm-openai \
+    -t "$IMAGE" \
+    .
+[+] Building 245.1s (21/21) FINISHED                             docker:default
+ => [internal] load build definition from Dockerfile.cpu                   0.1s
+ => => transferring dockerfile: 8.92kB                                     0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:22.04            3.0s
+ => [internal] load .dockerignore                                          0.0s
+ => => transferring context: 387B                                          0.0s
+ => [base-common 1/7] FROM docker.io/library/ubuntu:22.04@sha256:c7eb0200  2.2s
+ => => resolve docker.io/library/ubuntu:22.04@sha256:c7eb020043d8fc2ae079  0.0s
+ => => sha256:6f4ebca3e823b18dac366f72e537b1772bc3522a5 29.54MB / 29.54MB  1.2s
+ => => sha256:c7eb020043d8fc2ae0793fb35a37bff1cf33f156d4d 6.69kB / 6.69kB  0.0s
+ => => sha256:34577a83cd7a8f1e55f6eb173fd9bb70c16127a83d6bf06 424B / 424B  0.0s
+ => => sha256:65c77cbc27c2640de4c99ed5cfe6b689b192f81745a 2.30kB / 2.30kB  0.0s
+ => => extracting sha256:6f4ebca3e823b18dac366f72e537b1772bc3522a5c7ae299  0.9s
+ => [internal] load build context                                          0.7s
+ => => transferring context: 223.05MB                                      0.7s
+ => [base-common 2/7] WORKDIR /workspace/                                  0.8s
+ => [base-common 3/7] RUN --mount=type=cache,target=/var/cache/apt,shar  113.5s
+ => [base-common 4/7] RUN uv venv --python 3.12 --seed /opt/venv           3.1s
+ => [base-common 5/7] COPY requirements/common.txt requirements/common.tx  0.1s
+ => [base-common 6/7] COPY requirements/cpu.txt requirements/cpu.txt       0.1s
+ => [base-common 7/7] RUN --mount=type=cache,target=/root/.cache/uv       25.3s
+ => [base 1/1] RUN echo 'ulimit -c 0' >> ~/.bashrc                         0.2s
+ => [vllm-build 1/6] WORKDIR /workspace/vllm                               0.1s
+ => [vllm-openai 1/2] WORKDIR /workspace/                                  0.1s
+ => [vllm-build 2/6] COPY requirements/cpu-build.txt requirements/build.t  0.1s
+ => [vllm-build 3/6] RUN --mount=type=cache,target=/root/.cache/uv     uv  4.8s
+ => [vllm-build 4/6] COPY . .                                              0.9s
+ => [vllm-build 5/6] RUN if [ "0" != 0 ]; then bash tools/check_repo.sh ;  0.2s
+ => [vllm-build 6/6] RUN --mount=type=cache,target=/root/.cache/uv     -  75.8s
+ => [vllm-openai 2/2] RUN --mount=type=cache,target=/root/.cache/uv     -  6.5s
+ => exporting to image                                                     8.0s
+ => => exporting layers                                                    8.0s
+ => => writing image sha256:1ebea871636fa15a6b177c15ad1c8f80f3ad9113ebeed  0.0s
+ => => naming to quay.io/donaldsebleung/vllm-cpu-release-repo:20260214-di  0.0s
+dsleung@vllm-demo:~/vllm$ docker push "$IMAGE"
+The push refers to repository [quay.io/donaldsebleung/vllm-cpu-release-repo]
+a14972ba0e02: Pushed
+5f70bf18a086: Pushed
+e57f1ed958e0: Pushed
+beb33e9dce9d: Pushed
+1707fdb21c57: Pushed
+c0d36272b1e1: Pushed
+06aefeae8e30: Pushed
+12513a3b3b0c: Pushed
+7f00645259c2: Pushed
+fbb9bbbaf4d2: Pushed
+20260214-disable-avx512: digest: sha256:f452ed223a4bd056114e66ba7b4d75113553468ceb1dc39c5e645a3f0deaee3c size: 2415
+dsleung@vllm-demo:~/vllm$ exit
+exit

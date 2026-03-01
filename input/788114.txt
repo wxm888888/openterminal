@@ -1,0 +1,3 @@
+ix5s - bash - 6.12.64-1.qubes.fc37.x86_64 x86_64 GNU/Linux - 2 cores 4GB RAM    Loaded 13 files in 0.331029s
+~ 194210 0 $  cha http://localhost:8080
+~ 194353 0 $ [ble: exit]

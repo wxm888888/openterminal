@@ -76,7 +76,7 @@ def log_failed_url(url, error_type, error_msg=""):
         })
 
 
-def get_single_data(raw_dir, url, referer, proxy=None, verbose=False):
+def get_single_data(raw_dir, url, referer, proxy=None, verbose=False, txt_only=False):
     """获取单个录屏的数据"""
     code = []
     cast_id = url.split("/a/")[-1]
@@ -97,7 +97,8 @@ def get_single_data(raw_dir, url, referer, proxy=None, verbose=False):
         cast_path = os.path.join(raw_dir, "cast", f"{cast_id}.cast")
         
         # 保存 HTML
-        we(html_path, cdx, "wb", print_message=False)
+        if not txt_only:
+            we(html_path, cdx, "wb", print_message=False)
         
         # 保存 TXT
         txt_code = []
@@ -108,12 +109,13 @@ def get_single_data(raw_dir, url, referer, proxy=None, verbose=False):
             we(txt_path, txt_data, "wb", print_message=False)
         
         # 保存 CAST
-        cast_code = []
-        cast_data = gethtml(url + ".cast", url, headers=HEADERS, status_code=cast_code, proxy=proxy)
-        if cast_code != [200]:
-            log_failed_url(url, "cast_download_error", f"CAST HTTP {cast_code}")
-        else:
-            we(cast_path, cast_data, "wb", print_message=False)
+        if not txt_only:
+            cast_code = []
+            cast_data = gethtml(url + ".cast", url, headers=HEADERS, status_code=cast_code, proxy=proxy)
+            if cast_code != [200]:
+                log_failed_url(url, "cast_download_error", f"CAST HTTP {cast_code}")
+            else:
+                we(cast_path, cast_data, "wb", print_message=False)
         
         # 解析元数据
         cdx = cn(cdx)
@@ -149,7 +151,7 @@ def get_single_data(raw_dir, url, referer, proxy=None, verbose=False):
         sm, trs[1] = result[0], result[1]
         if trs[1] > -1:
             metadata["author"]["name"] = hmrstr(strfml(sm, "by", "</a>")[0]).strip()
-            metadata["author"]["profile_url"] = "https://asciinema.org " + strfml(sm, 'href="', '"')[0]
+            metadata["author"]["profile_url"] = "https://asciinema.org" + strfml(sm, 'href="', '"')[0]
             metadata["date"] = strfml(sm, 'datetime="', '"')[0].replace("T", " ").replace("Z", "")
 
         # 解析系统信息
@@ -201,52 +203,58 @@ def get_single_data(raw_dir, url, referer, proxy=None, verbose=False):
         return None
 
 
-def crawl_page(page_num, raw_dir, proxy=None, verbose=False, max_items=None, concurrency=3):
+def crawl_page(page_num, raw_dir, proxy=None, verbose=False, max_items=None, concurrency=3, txt_only=False):
     """爬取一页的数据"""
-    url = f"https://asciinema.org/explore/public?order=date&page= {page_num}"
+    url = f"https://asciinema.org/explore/public?order=date&page={page_num}"
     referer = None
     if page_num > 1:
-        referer = f"https://asciinema.org/explore/public?order=date&page= {page_num - 1}"
+        referer = f"https://asciinema.org/explore/public?order=date&page={page_num - 1}"
     
     idx = cn(gethtml(url, referer, headers=HEADERS, proxy=proxy))
     
     task_list = []
     trs = ["", 0]
-    count = 0
+    new_count = 0
+    total_on_page = 0
     
     while True:
         trs = strfml(idx, '"asciicast-card"', "", trs[1])
         if trs[1] < 0:
             break
+            
+        total_on_page += 1
         
         item_url = strfml(idx, 'href="', '"', trs[1])[0]
         cast_id = item_url.split("/a/")[-1] if "/a/" in item_url else item_url
         
         # 检查是否已存在
         cast_file = os.path.join(raw_dir, "cast", f"{cast_id}.cast")
-        if os.path.exists(cast_file):
+        txt_file = os.path.join(raw_dir, "txt", f"{cast_id}.txt")
+        check_file = txt_file if txt_only else cast_file
+        
+        if os.path.exists(check_file):
             if verbose:
                 print(f"  跳过已存在: {cast_id}")
             continue
         
-        full_url = "https://asciinema.org " + item_url
+        full_url = "https://asciinema.org" + item_url
         task_list.append(threading.Thread(
             target=get_single_data, 
-            args=[raw_dir, full_url, url, proxy, verbose]
+            args=[raw_dir, full_url, url, proxy, verbose, txt_only]
         ))
-        count += 1
+        new_count += 1
         
-        if max_items and count >= max_items:
+        if max_items and new_count >= max_items:
             break
     
     if task_list:
         setaskN(task_list, min(len(task_list), concurrency))
         time.sleep(0.5)
     
-    return count
+    return new_count, total_on_page
 
 
-def crawl_urls(url_list, raw_dir, proxy=None, verbose=False, concurrency=3):
+def crawl_urls(url_list, raw_dir, proxy=None, verbose=False, concurrency=3, txt_only=False):
     """爬取指定的 URL 列表（用于重试）"""
     task_list = []
     
@@ -255,14 +263,17 @@ def crawl_urls(url_list, raw_dir, proxy=None, verbose=False, concurrency=3):
         
         # 检查是否已存在
         cast_file = os.path.join(raw_dir, "cast", f"{cast_id}.cast")
-        if os.path.exists(cast_file):
+        txt_file = os.path.join(raw_dir, "txt", f"{cast_id}.txt")
+        check_file = txt_file if txt_only else cast_file
+        
+        if os.path.exists(check_file):
             if verbose:
                 print(f"  跳过已存在: {cast_id}")
             continue
         
         task_list.append(threading.Thread(
             target=get_single_data, 
-            args=[raw_dir, url, None, proxy, verbose]
+            args=[raw_dir, url, None, proxy, verbose, txt_only]
         ))
     
     if task_list:
@@ -309,7 +320,7 @@ def main():
     parser.add_argument('--output-dir', '-o', default='data/test_crawl', 
                         help='输出目录 (默认: data/test_crawl)')
     parser.add_argument('--pages', '-p', default='1', 
-                        help='页码范围，如 "1" 或 "1-5" (默认: 1)')
+                        help='页码范围，如 "1", "1-5", 或 "all" (默认: 1)')
     parser.add_argument('--proxy', default=None,
                         help='代理地址，如 http://127.0.0.1:7890 ')
     parser.add_argument('--max-per-page', '-m', type=int, default=None,
@@ -320,6 +331,8 @@ def main():
                         help='显示详细输出')
     parser.add_argument('--retry', '-r', action='store_true',
                         help='重试模式：只处理 failed_urls.txt 中的 URL')
+    parser.add_argument('--txt-only', action='store_true',
+                        help='仅爬取 txt 文件，不下载 html 和 cast 文件')
     
     args = parser.parse_args()
     
@@ -329,9 +342,10 @@ def main():
         output_dir = os.path.join(project_root, output_dir)
     
     raw_dir = os.path.join(output_dir, "raw")
-    os.makedirs(os.path.join(raw_dir, "cast"), exist_ok=True)
+    if not args.txt_only:
+        os.makedirs(os.path.join(raw_dir, "cast"), exist_ok=True)
+        os.makedirs(os.path.join(raw_dir, "html"), exist_ok=True)
     os.makedirs(os.path.join(raw_dir, "txt"), exist_ok=True)
-    os.makedirs(os.path.join(raw_dir, "html"), exist_ok=True)
     
     failed_urls_path = os.path.join(output_dir, "failed_urls.txt")
     all_data_path = os.path.join(output_dir, "all_data.json")
@@ -357,32 +371,41 @@ def main():
             retry_urls, raw_dir,
             proxy=args.proxy,
             verbose=args.verbose,
-            concurrency=args.concurrency
+            concurrency=args.concurrency,
+            txt_only=args.txt_only
         )
     else:
         # 正常爬取模式
-        if '-' in args.pages:
+        if args.pages.lower() == 'all':
+            pages = range(1, 10000)  # 设置一个足够大的上限，没有数据会自动退出
+        elif '-' in args.pages:
             start, end = map(int, args.pages.split('-'))
             pages = range(start, end + 1)
         else:
             pages = [int(args.pages)]
         
-        print(f"页码: {list(pages)}")
+        print(f"页码范围: {args.pages}")
         if args.max_per_page:
             print(f"每页最多: {args.max_per_page} 条")
         print()
         
         for page in pages:
             print(f"正在爬取第 {page} 页...")
-            count = crawl_page(
+            count, total_on_page = crawl_page(
                 page, raw_dir, 
                 proxy=args.proxy, 
                 verbose=args.verbose,
                 max_items=args.max_per_page,
-                concurrency=args.concurrency
+                concurrency=args.concurrency,
+                txt_only=args.txt_only
             )
             total_count += count
             print(f"  第 {page} 页完成，获取 {count} 条\n")
+            
+            # 如果这一页没有任何数据，说明已经到了最后一页，提前结束
+            if total_on_page == 0:
+                print("没有发现更多页面，爬取结束。")
+                break
     
     # 保存失败的 URL
     if failed_urls:

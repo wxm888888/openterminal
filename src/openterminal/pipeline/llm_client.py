@@ -70,7 +70,7 @@ class LLMClient:
         messages: list[dict],
         model: str,
         temperature: float = 0.2,
-        max_tokens: int = 65536,
+        max_tokens: int | None = None,
         max_retries: int = 10,
         base_delay: float = 5.0,
         timeout: float | None = None,
@@ -91,6 +91,9 @@ class LLMClient:
         """
         last_error: Exception | None = None
 
+        # Only pass max_tokens when explicitly set by the caller
+        token_kwargs: dict = {"max_tokens": max_tokens} if max_tokens is not None else {}
+
         for attempt in range(max_retries):
             try:
                 async with self._semaphore:
@@ -101,7 +104,7 @@ class LLMClient:
                                 messages=messages,
                                 model=model,
                                 temperature=temperature,
-                                max_tokens=max_tokens,
+                                **token_kwargs,
                             ),
                             timeout=timeout if timeout is not None else self._timeout,
                         )
@@ -154,7 +157,9 @@ class LLMClient:
                     await asyncio.sleep(wait)
             except APIStatusError as exc:
                 last_error = exc
-                if exc.status_code >= 500 and attempt < max_retries - 1:
+                # Retryable status codes (418 = API gateway wrapping upstream errors)
+                _RETRYABLE_STATUS_CODES = {418, 500, 502, 503, 504}
+                if exc.status_code in _RETRYABLE_STATUS_CODES and attempt < max_retries - 1:
                     wait = min(base_delay * (2 ** attempt), 60) + random.uniform(0, 1)
                     ctx = f"[{log_context}] " if log_context else ""
                     self._log(

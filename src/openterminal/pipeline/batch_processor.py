@@ -205,30 +205,6 @@ async def batch_process(
 
     llm_client._log_callback = _log_callback
 
-    def _on_done(fut: asyncio.Task, filename: str) -> None:
-        nonlocal completed
-        try:
-            result: FileResult = fut.result()
-            counts[result.status] = counts.get(result.status, 0) + 1
-            # Write errors immediately to fail.json
-            if result.errors:
-                for error in result.errors:
-                    _append_error_to_file(error)
-        except Exception as exc:
-            counts["failed"] += 1
-            error_msg = str(exc).replace('\n', ' ').replace('\r', '')[:150]
-            _log_callback(f"❌ [ERROR] File: {filename} | Uncaught exception: {error_msg}")
-            error_entry = {
-                "file": filename,
-                "step": "unknown",
-                "model": "unknown",
-                "reason": str(exc),
-                "timestamp": datetime.now().isoformat(),
-            }
-            _append_error_to_file(error_entry)
-        completed += 1
-        _render_display()
-
     # Background ticker: re-render every second for live timers
     ticker_running = True
 
@@ -240,30 +216,60 @@ async def batch_process(
 
     ticker_task = asyncio.create_task(_ticker())
 
-    # Launch all files concurrently – the LLM pool regulates throughput
-    tasks: list[asyncio.Task] = []
+    # Producer-consumer: fixed worker pool pulls from queue
+    num_workers = max_llm_concurrency
+    queue: asyncio.Queue[tuple[str, str, str] | None] = asyncio.Queue()
+
+    # Enqueue all files (lightweight tuples, not Task objects)
     for txt_file in txt_files:
         filename = os.path.splitext(os.path.basename(txt_file))[0]
         output_file = os.path.join(output_dir, f"{filename}.json")
+        queue.put_nowait((txt_file, output_file, filename))
 
-        task = asyncio.create_task(
-            _process_and_save(
-                input_file=txt_file,
-                output_file=output_file,
-                models=models,
-                judge_model=judge_model,
-                filter_model=filter_model,
-                max_input_tokens=max_input_tokens,
-                llm_client=llm_client,
-                max_retries=max_retries,
-                status_callback=_status_callback,
-                log_callback=_log_callback,
-            )
-        )
-        task.add_done_callback(lambda f, fn=filename: _on_done(f, fn))
-        tasks.append(task)
+    # Poison pills at the tail — workers exit after all files are processed
+    for _ in range(num_workers):
+        queue.put_nowait(None)
 
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    async def _worker():
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            txt_file, output_file, filename = item
+            try:
+                result: FileResult = await _process_and_save(
+                    input_file=txt_file,
+                    output_file=output_file,
+                    models=models,
+                    judge_model=judge_model,
+                    filter_model=filter_model,
+                    max_input_tokens=max_input_tokens,
+                    llm_client=llm_client,
+                    max_retries=max_retries,
+                    status_callback=_status_callback,
+                    log_callback=_log_callback,
+                )
+                counts[result.status] = counts.get(result.status, 0) + 1
+                if result.errors:
+                    for error in result.errors:
+                        _append_error_to_file(error)
+            except Exception as exc:
+                counts["failed"] += 1
+                error_msg = str(exc).replace('\n', ' ').replace('\r', '')[:150]
+                _log_callback(f"❌ [ERROR] File: {filename} | Uncaught exception: {error_msg}")
+                _append_error_to_file({
+                    "file": filename,
+                    "step": "unknown",
+                    "model": "unknown",
+                    "reason": str(exc),
+                    "timestamp": datetime.now().isoformat(),
+                })
+            nonlocal completed
+            completed += 1
+            _render_display()
+
+    workers = [asyncio.create_task(_worker()) for _ in range(num_workers)]
+    await asyncio.gather(*workers)
 
     # Stop ticker and final render
     ticker_running = False
@@ -275,7 +281,7 @@ async def batch_process(
     _render_display()
 
     elapsed = time.time() - start_time
-    _print_summary(txt_files, counts, elapsed, results, output_dir)
+    _print_summary(txt_files, counts, elapsed, output_dir)
 
     # Count total errors in fail.json
     try:
@@ -341,7 +347,7 @@ def _print_banner(
     print(f"{'=' * 70}\n")
 
 
-def _print_summary(txt_files, counts, elapsed, results, output_dir):
+def _print_summary(txt_files, counts, elapsed, output_dir):
     print(f"\n{'=' * 70}")
     print("Batch Processing Summary")
     print(f"{'=' * 70}")

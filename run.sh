@@ -9,7 +9,7 @@ INPUT_DIR="input"
 #如果需要上次继续跑，填写output/上次时间戳；否则设置为空
 RESUME_DIR=""
 
-MODELS="gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct"
+MODELS="gemini-2.5-flash-nothinking kimi-k2-instruct"
 JUDGE_MODEL="gemini-2.5-flash-nothinking"
 FILTER_MODEL="gemini-2.5-flash-nothinking"
 

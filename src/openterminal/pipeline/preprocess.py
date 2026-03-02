@@ -58,7 +58,7 @@ async def check_file_quality(
             ],
             model=model_name,
             temperature=0.2,
-            max_tokens=1024,
+            max_tokens=64000,
             max_retries=max_retries,
             log_context=f"quality_filter:{os.path.basename(file_path)}:{model_name}",
         )

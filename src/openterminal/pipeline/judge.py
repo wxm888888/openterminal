@@ -124,6 +124,7 @@ async def judge_results(
             ],
             model=judge_model,
             temperature=0.3,
+            max_tokens=64000,
             max_retries=max_retries,
             log_context=f"judge:{os.path.basename(txt_file)}:{judge_model}",
         )

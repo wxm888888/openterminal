@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # API Configuration
-export OPENAI_API_KEY=""
-export OPENAI_BASE_URL="
+export OPENAI_API_KEY="sk-vTUtgFvIecBHF9XpZvg0OVFYYexMSZGayAmtFKjWvX5PFt10"
+export OPENAI_BASE_URL="https://yeysai.com/v1"
 OUTPUT_DIR="output"
 INPUT_DIR="input"
 

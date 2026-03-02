@@ -4,6 +4,7 @@
 export OPENAI_API_KEY=""
 export OPENAI_BASE_URL="
 OUTPUT_DIR="output"
+INPUT_DIR="input"
 
 MODELS="gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct"
 JUDGE_MODEL="gemini-2.5-flash-nothinking"

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # API Configuration
-export OPENAI_API_KEY="sk-vTUtgFvIecBHF9XpZvg0OVFYYexMSZGayAmtFKjWvX5PFt10"
-export OPENAI_BASE_URL="https://yeysai.com/v1"
+export OPENAI_API_KEY=""
+export OPENAI_BASE_URL=""
 OUTPUT_DIR="output"
 INPUT_DIR="input"
 
-MODELS="gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct"
+MODELS="gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct gemini-2.5-flash-nothinking kimi-k2-instruct"
 JUDGE_MODEL="gemini-2.5-flash-nothinking"
 FILTER_MODEL="gemini-2.5-flash-nothinking"
 

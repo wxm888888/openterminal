@@ -55,7 +55,7 @@ input/*.txt → 预处理(质量过滤+Token计数) → 多模型4步解析 → 
 将**多个模型的解析结果**和原始文本一起交给裁判模型（`judge-model`），由其：
 1. **选择最佳结果**：对比各模型的分割质量，选出最准确的那个
 2. **训练适用性判断**：判断该条数据是否适合用于 Terminal Agent 训练
-3. 不适合训练的数据会标记 `rejection_type` 和 `rejection_reason`
+3. 不适合训练的数据会标记 `rejection_type` 或 `rejection_reason`
 
 ### 四、基于规则的评估（可选）
 
@@ -109,7 +109,7 @@ cd openterminal
 ### 2. 创建环境并安装依赖
 
 ```bash
-conda create -n openterminal python=3.10
+conda create -n openterminal python=3.12
 conda activate openterminal
 pip install -r requirements.txt
 pip install -e .
@@ -182,7 +182,7 @@ python evaluation/evaluator.py --batch
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `--input-dir` | str | `data/raw/txt` | 输入 txt 文件目录 |
+| `--input-dir` | str | `input` | 输入 txt 文件目录 |
 | `--output-dir` | str | `output` | 输出结果目录 |
 | `--models` | str[] | *必填* | 解析模型列表（至少 2 个） |
 | `--judge-model` | str | *必填* | 裁判模型 |

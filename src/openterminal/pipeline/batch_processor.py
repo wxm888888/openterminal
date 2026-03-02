@@ -301,7 +301,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Batch process txt files with multiple models"
     )
-    parser.add_argument("--input-dir", type=str, default="data/raw/txt")
+    parser.add_argument("--input-dir", type=str, default="input")
     parser.add_argument("--output-dir", type=str, default="output")
     parser.add_argument("--models", type=str, nargs="+", required=True)
     parser.add_argument("--judge-model", type=str, required=True)

@@ -15,6 +15,7 @@ import json
 import time
 import asyncio
 import argparse
+import threading
 from datetime import datetime
 
 from openterminal.pipeline.llm_client import LLMClient
@@ -34,21 +35,52 @@ async def batch_process(
     filter_model: str | None,
     max_input_tokens: int | None,
     max_retries: int,
+    max_llm_concurrency: int,
+    timeout: float,
+    resume_dir: str | None = None,
 ) -> None:
     """
     Process every ``.txt`` file in *input_dir*, write one unified JSON
     per file into *output_dir/{timestamp}/*.
-    """
-    llm_client = LLMClient.get()
 
-    # Create timestamped subdirectory
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = os.path.join(output_dir, timestamp)
-    os.makedirs(output_dir, exist_ok=True)
-    txt_files = sorted(glob.glob(os.path.join(input_dir, "*.txt")))
+    If *resume_dir* is given, reuse that directory and skip files whose
+    output JSON already exists (checkpoint / resume).
+    """
+    # Initialize LLM client inside event loop
+    llm_client = LLMClient.init(max_concurrency=max_llm_concurrency, timeout=timeout)
+
+    if resume_dir:
+        # Resume mode: reuse the given output directory
+        output_dir = resume_dir
+        os.makedirs(output_dir, exist_ok=True)
+    else:
+        # Normal mode: create timestamped subdirectory
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = os.path.join(output_dir, timestamp)
+        os.makedirs(output_dir, exist_ok=True)
+    all_txt_files = sorted(glob.glob(os.path.join(input_dir, "*.txt")))
+
+    if not all_txt_files:
+        print(f"⚠️  No .txt files found in {input_dir}")
+        return
+
+    # --- Resume: filter out already-completed files ---
+    skipped = 0
+    txt_files = []
+    for f in all_txt_files:
+        file_id = os.path.splitext(os.path.basename(f))[0]
+        existing_output = os.path.join(output_dir, f"{file_id}.json")
+        if os.path.exists(existing_output):
+            skipped += 1
+        else:
+            txt_files.append(f)
+
+    if skipped:
+        print(f"⏩ Resuming: skipped {skipped} already-completed file(s), "
+              f"{len(txt_files)} remaining.")
 
     if not txt_files:
-        print(f"⚠️  No .txt files found in {input_dir}")
+        print(f"✅ All {skipped} file(s) already processed. Nothing to do.")
         return
 
     # --- Banner ---
@@ -60,7 +92,12 @@ async def batch_process(
     counts = {"success": 0, "filtered": 0, "too_large": 0, "failed": 0}
     completed = 0
     total = len(txt_files)
-    all_errors: list[dict] = []  # Collect all errors for fail.json
+    fail_file = os.path.join(output_dir, "fail.json")
+
+    # Initialize fail.json as empty array if starting fresh
+    if not os.path.exists(fail_file):
+        with open(fail_file, "w", encoding="utf-8") as fh:
+            json.dump([], fh)
 
     # Live file stage tracking: file_id -> (stage, stage_start_time)
     file_stages: dict[str, tuple[str, float]] = {}
@@ -70,6 +107,7 @@ async def batch_process(
         "judge":      "[JUDGE]",
     }
     prev_display_lines = 0
+    display_lock = threading.Lock()
 
     def _fmt_time(seconds: float) -> str:
         h = int(seconds) // 3600
@@ -80,46 +118,49 @@ async def batch_process(
     def _render_display() -> None:
         nonlocal prev_display_lines
 
-        if prev_display_lines > 0:
-            sys.stdout.write(f"\033[{prev_display_lines}A\033[J")
+        with display_lock:
+            # Clear previous display - use line-by-line clearing for thorough cleanup
+            if prev_display_lines > 0:
+                for _ in range(prev_display_lines):
+                    sys.stdout.write("\033[A\033[2K")  # Move up and clear entire line
 
-        now = time.time()
-        lines = []
+            now = time.time()
+            lines = []
 
-        # Active tasks with per-task timers (shown first)
-        active_items = [
-            (fid, stage, st) for fid, (stage, st) in file_stages.items()
-            if stage != "done"
-        ]
-        if active_items:
-            lines.append("--- Active Tasks ---")
-            for fid, stage, stage_start in active_items:
-                label = STAGE_LABELS.get(stage, "[???]   ")
-                task_elapsed = _fmt_time(now - stage_start)
-                lines.append(f"  {label} {fid}  {task_elapsed}")
+            # Active tasks with per-task timers (shown first)
+            active_items = [
+                (fid, stage, st) for fid, (stage, st) in file_stages.items()
+                if stage != "done"
+            ]
+            if active_items:
+                lines.append("--- Active Tasks ---")
+                for fid, stage, stage_start in active_items:
+                    label = STAGE_LABELS.get(stage, "[???]   ")
+                    task_elapsed = _fmt_time(now - stage_start)
+                    lines.append(f"  {label} {fid}  {task_elapsed}")
 
-        # Progress bar line (at the bottom)
-        elapsed = now - start_time
-        pct = (completed / total * 100) if total else 100
-        bar_len = 50
-        filled = int(bar_len * completed / total) if total else bar_len
-        bar = "#" * filled + "-" * (bar_len - filled)
-        llm_active = llm_client.active_requests
-        llm_max = llm_client.max_concurrency
-        lines.append(
-            f"Progress: {pct:5.1f}% [{bar}] {completed}/{total}  {_fmt_time(elapsed)}"
-        )
-        lines.append(
-            f"          "
-            f"SUCCESS:{counts['success']}   FAIL:{counts['failed']}   "
-            f"BIG:{counts['too_large']}   SKIP:{counts['filtered']}    "
-            f"LLM:{llm_active}/{llm_max}"
-        )
+            # Progress bar line (at the bottom)
+            elapsed = now - start_time
+            pct = (completed / total * 100) if total else 100
+            bar_len = 50
+            filled = int(bar_len * completed / total) if total else bar_len
+            bar = "#" * filled + "-" * (bar_len - filled)
+            llm_active = llm_client.active_requests
+            llm_max = llm_client.max_concurrency
+            lines.append(
+                f"Progress: {pct:5.1f}% [{bar}] {completed}/{total}  {_fmt_time(elapsed)}"
+            )
+            lines.append(
+                f"          "
+                f"SUCCESS:{counts['success']}   FAIL:{counts['failed']}   "
+                f"BIG:{counts['too_large']}   SKIP:{counts['filtered']}    "
+                f"LLM:{llm_active}/{llm_max}"
+            )
 
-        output = "\n".join(lines) + "\n"
-        sys.stdout.write(output)
-        sys.stdout.flush()
-        prev_display_lines = len(lines)
+            output = "\n".join(lines) + "\n"
+            sys.stdout.write(output)
+            sys.stdout.flush()
+            prev_display_lines = len(lines)
 
     def _status_callback(file_id: str, stage: str) -> None:
         if stage == "done":
@@ -135,14 +176,32 @@ async def batch_process(
 
     def _log_callback(msg: str) -> None:
         nonlocal prev_display_lines
-        if prev_display_lines > 0:
-            sys.stdout.write(f"\033[{prev_display_lines}A\033[J")
-        # Ensure msg is a single line for clean display
-        single_line = msg.replace('\n', ' ').replace('\r', '')
-        print(single_line)
-        sys.stdout.flush()
-        prev_display_lines = 0
+        with display_lock:
+            # Clear previous display using same method as _render_display
+            if prev_display_lines > 0:
+                for _ in range(prev_display_lines):
+                    sys.stdout.write("\033[A\033[2K")
+            # Ensure msg is a single line for clean display
+            single_line = msg.replace('\n', ' ').replace('\r', '')
+            print(single_line)
+            sys.stdout.flush()
+            prev_display_lines = 0
         _render_display()
+
+    def _append_error_to_file(error: dict) -> None:
+        """Append a single error to fail.json immediately."""
+        try:
+            # Read existing errors
+            with open(fail_file, "r", encoding="utf-8") as fh:
+                errors = json.load(fh)
+            # Append new error
+            errors.append(error)
+            # Write back
+            with open(fail_file, "w", encoding="utf-8") as fh:
+                json.dump(errors, fh, ensure_ascii=False, indent=2)
+        except Exception as e:
+            # Fallback: if file operation fails, just log it
+            print(f"⚠️  Failed to write error to fail.json: {e}")
 
     llm_client._log_callback = _log_callback
 
@@ -151,20 +210,22 @@ async def batch_process(
         try:
             result: FileResult = fut.result()
             counts[result.status] = counts.get(result.status, 0) + 1
-            # Collect errors from the pipeline result
+            # Write errors immediately to fail.json
             if result.errors:
-                all_errors.extend(result.errors)
+                for error in result.errors:
+                    _append_error_to_file(error)
         except Exception as exc:
             counts["failed"] += 1
             error_msg = str(exc).replace('\n', ' ').replace('\r', '')[:150]
             _log_callback(f"❌ [ERROR] File: {filename} | Uncaught exception: {error_msg}")
-            all_errors.append({
+            error_entry = {
                 "file": filename,
                 "step": "unknown",
                 "model": "unknown",
                 "reason": str(exc),
                 "timestamp": datetime.now().isoformat(),
-            })
+            }
+            _append_error_to_file(error_entry)
         completed += 1
         _render_display()
 
@@ -216,12 +277,14 @@ async def batch_process(
     elapsed = time.time() - start_time
     _print_summary(txt_files, counts, elapsed, results, output_dir)
 
-    # Write fail.json with all collected errors
-    if all_errors:
-        fail_file = os.path.join(output_dir, "fail.json")
-        with open(fail_file, "w", encoding="utf-8") as fh:
-            json.dump(all_errors, fh, ensure_ascii=False, indent=2)
-        print(f"\n❌ Error details saved to: {fail_file}  ({len(all_errors)} error(s))")
+    # Count total errors in fail.json
+    try:
+        with open(fail_file, "r", encoding="utf-8") as fh:
+            error_count = len(json.load(fh))
+        if error_count > 0:
+            print(f"\n❌ Error details saved to: {fail_file}  ({error_count} error(s))")
+    except Exception:
+        pass
 
 
 async def _process_and_save(
@@ -303,6 +366,13 @@ def main() -> None:
     )
     parser.add_argument("--input-dir", type=str, default="input")
     parser.add_argument("--output-dir", type=str, default="output")
+    parser.add_argument(
+        "--resume-dir",
+        type=str,
+        default=None,
+        help="Resume from a previous output directory. Files with existing "
+             "output JSON will be skipped.",
+    )
     parser.add_argument("--models", type=str, nargs="+", required=True)
     parser.add_argument("--judge-model", type=str, required=True)
     parser.add_argument("--filter-model", type=str, default=None)
@@ -327,10 +397,6 @@ def main() -> None:
         print("⚠️  At least 2 models are required for comparison")
         sys.exit(1)
 
-    # Initialise the global LLM pool
-    # The log_callback will be set during batch_process when the live display starts
-    LLMClient.init(max_concurrency=args.max_llm_concurrency, timeout=args.timeout)
-
     asyncio.run(
         batch_process(
             input_dir=args.input_dir,
@@ -340,6 +406,9 @@ def main() -> None:
             filter_model=args.filter_model,
             max_input_tokens=args.max_input_tokens,
             max_retries=args.max_retries,
+            max_llm_concurrency=args.max_llm_concurrency,
+            timeout=args.timeout,
+            resume_dir=args.resume_dir,
         )
     )
 

@@ -271,7 +271,7 @@ python evaluation/evaluator.py --batch
 | `success` | 处理成功，`final_result` 包含最终分割结果 |
 | `filtered` | 被质量过滤器排除（不适合训练） |
 | `too_large` | 文件 token 数超过阈值 |
-| `failed` | 处理过程中出错 |
+| `failed` | 处理txt文件失败 |
 
 ### 最终输出数据格式
 
@@ -286,3 +286,4 @@ python evaluation/evaluator.py --batch
 | `turns[].prompt` | 该轮的终端提示符 |
 | `turns[].action.content` | 用户输入的命令 |
 | `turns[].observation.content` | 终端返回的输出 |
+
